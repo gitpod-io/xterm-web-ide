@@ -7,7 +7,7 @@ function startServer() {
   const app = express();
   expressWs(app);
 
-  var terminals = {},
+  const terminals = {},
       logs = {};
 
   app.use('/styles.css', express.static(__dirname + '/assets/styles.css'));
@@ -15,11 +15,11 @@ function startServer() {
     res.sendFile(__dirname + '/logo.png');
   });
 
-  app.get('/', (req, res) => { // lgtm [js/missing-rate-limiting]
+  app.get('/', (_req, res) => { // lgtm [js/missing-rate-limiting]
     res.sendFile(__dirname + '/index.html');
   });
 
-  app.get('/style.css', (req, res) => { // lgtm [js/missing-rate-limiting]
+  app.get('/style.css', (_req, res) => { // lgtm [js/missing-rate-limiting]
     res.sendFile(__dirname + '/style.css');
   });
 
@@ -39,12 +39,27 @@ function startServer() {
         encoding: null
       });
 
+    if (Object.keys(terminals).length > 0) {
+      const term = Object.values(terminals)[0];
+      console.log(`Using existing terminal with PID ${term.pid}`);
+      res.send(term.pid.toString());
+      res.end();
+      return;
+    }
+
     console.log(`Created terminal with PID: ${term.pid}`);
     terminals[term.pid] = term;
     logs[term.pid] = '';
-    term.on('data', function(data) {
+
+    term.onData((data) => {
       logs[term.pid] += data;
     });
+
+    term.onExit((_e) => {
+      delete terminals[term.pid];
+      console.log(`Closed terminal ${term.pid}`);
+    });
+
     res.send(term.pid.toString());
     res.end();
   });
@@ -60,9 +75,9 @@ function startServer() {
     res.end();
   });
 
-  app.ws('/terminals/:pid', function (ws, req) {
-    var term = terminals[parseInt(req.params.pid)];
-    console.log(`Connected to terminal ${term.pid}`);
+  app.ws('/terminals/:pid', (ws, req) => {
+    const term = terminals[parseInt(req.params.pid)];
+    console.log(`Client connected to terminal ${term.pid}`);
     ws.send(logs[term.pid]);
 
     // binary message buffering
@@ -88,29 +103,28 @@ function startServer() {
     // WARNING: This is a naive implementation that will not throttle the flow of data. This means
     // it could flood the communication channel and make the terminal unresponsive. Learn more about
     // the problem and how to implement flow control at https://xtermjs.org/docs/guides/flowcontrol/
-    term.on('data', function(data) {
+    term.on('data', (data) => {
       try {
         send(data);
       } catch (ex) {
         // The WebSocket is not open, ignore
       }
     });
-    ws.on('message', function(msg) {
+
+    term.on('exit', ((_e) => {
+      ws.send(`\r\nThis terminal has been closed. Refresh the page to create a new one.`);
+    }));
+
+    ws.on('message', (msg) => {
       term.write(msg);
     });
-    ws.on('close', function () {
-      /*
-      term.kill();
-      console.log('Closed terminal ' + term.pid);
-      // Clean things up
-      delete terminals[term.pid];
-      delete logs[term.pid];
-      */
+    ws.on('close', () => {
+      console.log('Client closed terminal ' + term.pid);
     });
   });
 
   const port = process.env.PORT || 23000,
-      host = os.platform() === 'win32' ? '127.0.0.1' : '0.0.0.0';
+      host = '0.0.0.0';
 
   console.log('App listening to http://127.0.0.1:' + port);
   app.listen(port, host);
