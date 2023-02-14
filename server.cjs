@@ -39,7 +39,7 @@ function startServer() {
         encoding: null
       });
 
-    console.log('Created terminal with PID: ' + term.pid);
+    console.log(`Created terminal with PID: ${term.pid}`);
     terminals[term.pid] = term;
     logs[term.pid] = '';
     term.on('data', function(data) {
