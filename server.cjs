@@ -1,6 +1,5 @@
 const express = require('express');
 const expressWs = require('express-ws');
-const os = require('os');
 const pty = require('node-pty');
 
 function startServer() {
