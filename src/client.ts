@@ -6,16 +6,14 @@ import { FitAddon } from "xterm-addon-fit";
 import { WebLinksAddon } from "xterm-addon-web-links";
 import { WebglAddon } from "xterm-addon-webgl";
 import { Unicode11Addon } from "xterm-addon-unicode11";
-//import { LigaturesAddon } from 'xterm-addon-ligatures';
-
-import { Addon, AddonType } from "./lib/types";
+// todo: this does not work and results in ESM issues import { LigaturesAddon } from "xterm-addon-ligatures";
 
 export interface IWindowWithTerminal extends Window {
     term: Terminal;
 }
 declare let window: IWindowWithTerminal;
 
-let term: any;
+let term: Terminal;
 let protocol: string;
 let socketURL: string;
 let socket: ReconnectingWebSocket;
@@ -37,7 +35,8 @@ function createTerminal(element: HTMLElement): void {
         ["Windows", "Win16", "Win32", "WinCE"].indexOf(navigator.platform) >= 0;
     term = new Terminal({
         windowsMode: isWindows,
-        fontFamily: "Fira Code, courier-new, courier, monospace",
+        fontFamily: "JetBrains Mono, Fira Code, courier-new, courier, monospace",
+        allowProposedApi: true
     } as ITerminalOptions);
 
     window.term = term; // Expose `term` to window for debugging purposes
@@ -73,7 +72,7 @@ function createTerminal(element: HTMLElement): void {
                     connectionTimeout: 1000,
                     maxRetries: 20,
                 });
-                socket.onopen = runRealTerminal;
+                socket.onopen = () => runRealTerminal(term);
                 //@ts-ignore
                 socket.onclose = handleDisconected;
                 //@ts-ignore
@@ -127,51 +126,31 @@ function output(
     }
 }
 
-function runRealTerminal(): void {
-    addons.attach.instance = new AttachAddon(socket as WebSocket);
-    term.loadAddon(addons.attach.instance);
-    term._initialized = true;
+const fitAddon = new FitAddon();
+const webglAddon = new WebglAddon();
+const webLinksAddon = new WebLinksAddon();
+const unicodeAddon = new Unicode11Addon();
+
+let attachAddon: AttachAddon;
+
+function runRealTerminal(terminal: Terminal): void {
+    attachAddon = new AttachAddon(socket as WebSocket);
+    terminal.loadAddon(attachAddon);
     initAddons(term);
 }
 
-const addons: { [T in AddonType]: Addon<T> } = {
-    attach: { name: "attach", ctor: AttachAddon, canChange: false },
-    fit: { name: "fit", ctor: FitAddon, canChange: false },
-    "web-links": { name: "web-links", ctor: WebLinksAddon, canChange: false },
-    webgl: { name: "webgl", ctor: WebglAddon, canChange: true },
-    unicode11: { name: "unicode11", ctor: Unicode11Addon, canChange: false },
-    ligatures: { name: "ligatures", ctor: Unicode11Addon, canChange: true },
-};
-
 function initAddons(term: Terminal): void {
-    Object.keys(addons).forEach((name: any) => {
-        const addon = addons[name as AddonType];
-        //@ts-ignore
-        addon.instance = new addon.ctor();
-        term.loadAddon(addon.instance);
-        if (addon.name === "unicode11") {
-            term.unicode.activeVersion = "11";
-        }
-        addon.instance!.dispose();
-        addon.instance = undefined;
-    });
+    term.loadAddon(fitAddon);
+    term.loadAddon(webglAddon);
+    term.loadAddon(webLinksAddon);
+    term.loadAddon(unicodeAddon);
 }
 
 function updateTerminalSize(): void {
     //@ts-ignore
-    addons.fit.instance.fit();
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+    fitAddon.fit();
 }
 
 window.onresize = () => updateTerminalSize();
-
-function addDomListener(
-    element: HTMLElement,
-    type: string,
-    handler: (...args: any[]) => any
-): void {
-    element.addEventListener(type, handler);
-    term._core.register({
-        dispose: () => element.removeEventListener(type, handler),
-    });
-}
-
