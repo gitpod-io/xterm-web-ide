@@ -119,14 +119,14 @@ function startServer() {
       term.write(msg);
     });
     ws.on('close', () => {
-      console.log('Client closed terminal ' + term.pid);
+      console.log(`Client closed terminal ${term.pid}`);
     });
   });
 
   const port = process.env.PORT || 23000,
       host = '0.0.0.0';
 
-  console.log('App listening to http://127.0.0.1:' + port);
+  console.log(`App listening to http://127.0.0.1:${port}`);
   app.listen(port, host);
 }
 
