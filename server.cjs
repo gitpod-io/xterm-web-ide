@@ -4,7 +4,7 @@ const os = require('os');
 const pty = require('node-pty');
 
 function startServer() {
-  var app = express();
+  const app = express();
   expressWs(app);
 
   var terminals = {},
@@ -19,16 +19,11 @@ function startServer() {
     res.sendFile(__dirname + '/index.html');
   });
 
-  app.get('/test', (req, res) => { // lgtm [js/missing-rate-limiting]
-    res.sendFile(__dirname + '/test.html');
-  });
-
   app.get('/style.css', (req, res) => { // lgtm [js/missing-rate-limiting]
     res.sendFile(__dirname + '/style.css');
   });
 
   app.use('/dist', express.static(__dirname + '/dist'));
-  app.use('/src', express.static(__dirname + '/src'));
 
   app.post('/terminals', (req, res) => {
     const env = Object.assign({}, process.env);
@@ -70,21 +65,6 @@ function startServer() {
     console.log(`Connected to terminal ${term.pid}`);
     ws.send(logs[term.pid]);
 
-    // string message buffering
-    function buffer(socket, timeout) {
-      let s = '';
-      let sender = null;
-      return (data) => {
-        s += data;
-        if (!sender) {
-          sender = setTimeout(() => {
-            socket.send(s);
-            s = '';
-            sender = null;
-          }, timeout);
-        }
-      };
-    }
     // binary message buffering
     function bufferUtf8(socket, timeout) {
       let buffer = [];
@@ -129,7 +109,7 @@ function startServer() {
     });
   });
 
-  var port = process.env.PORT || 23000,
+  const port = process.env.PORT || 23000,
       host = os.platform() === 'win32' ? '127.0.0.1' : '0.0.0.0';
 
   console.log('App listening to http://127.0.0.1:' + port);
