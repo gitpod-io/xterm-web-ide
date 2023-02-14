@@ -56,13 +56,12 @@ function createTerminal(element: HTMLElement): void {
         }/terminals/`;
 
     term.open(element);
-    //addons.fit.instance!.fit();
+    updateTerminalSize();
     term.focus();
 
     // fit is called within a setTimeout, cols and rows need this.
     setTimeout(() => {
-        // Set terminal size again to set the specific dimensions on the demo
-        //updateTerminalSize();
+        updateTerminalSize();
 
         fetch(`/terminals?cols=${term.cols}&rows=${term.rows}`, {
             method: "POST",
