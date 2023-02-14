@@ -19,6 +19,8 @@ let socketURL: string;
 let socket: ReconnectingWebSocket;
 let pid: number;
 
+const defaultFonts = ["JetBrains Mono", "Fira Code", "courier-new", "courier", "monospace"];
+
 const terminalContainer = document.getElementById("terminal-container");
 
 if (terminalContainer) {
@@ -35,7 +37,7 @@ function createTerminal(element: HTMLElement): void {
         ["Windows", "Win16", "Win32", "WinCE"].indexOf(navigator.platform) >= 0;
     term = new Terminal({
         windowsMode: isWindows,
-        fontFamily: "JetBrains Mono, Fira Code, courier-new, courier, monospace",
+        fontFamily: defaultFonts.join(", "),
         allowProposedApi: true
     } as ITerminalOptions);
 
@@ -87,8 +89,10 @@ reloadButton.innerText = "Reload";
 reloadButton.onclick = () => location.reload();
 
 function handleDisconected(e: CloseEvent) {
-    console.error(e);
     switch (e.code) {
+        case 1001:
+            // This error happens every page reload, ignore
+            break;
         case 1005:
             output("For some reason the WebSocket closed. Reload?", {
                 formActions: [reloadButton],
@@ -105,6 +109,7 @@ function handleDisconected(e: CloseEvent) {
             }
             break;
     }
+    console.error(e);
 }
 
 const outputDialog = document.getElementById("output")!;
