@@ -1,0 +1,27 @@
+{
+  "name": "xterm-web-ide",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/filiptronicek/xterm-web-ide.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/filiptronicek/xterm-web-ide/issues"
+  },
+  "homepage": "https://github.com/filiptronicek/xterm-web-ide#readme",
+  "dependencies": {
+    "reconnecting-websocket": "^4.4.0",
+    "xterm": "^5.1.0"
+  },
+  "devDependencies": {
+    "express": "^4.18.2",
+    "express-ws": "^5.0.2",
+    "node-pty": "^0.10.1"
+  }
+}
