@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf out-tsc && tsc && rollup -c rollup.config.js"
+    "build": "rimraf out-tsc && tsc && rollup -c rollup.config.js",
+    "start:server": "node server.cjs"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,7 @@
   },
   "homepage": "https://github.com/filiptronicek/xterm-web-ide#readme",
   "dependencies": {
+    "node": "16",
     "reconnecting-websocket": "^4.4.0",
     "xterm": "^5.1.0",
     "xterm-addon-attach": "^0.8.0",

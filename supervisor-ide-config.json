@@ -1,0 +1,9 @@
+{
+    "entrypoint": "/ide/xterm/startup.sh",
+    "readinessProbe": {
+        "type": "http",
+        "http": {
+            "path": "/"
+        }
+    }
+}
