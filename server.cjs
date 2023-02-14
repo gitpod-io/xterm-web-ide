@@ -3,9 +3,6 @@ const expressWs = require('express-ws');
 const os = require('os');
 const pty = require('node-pty');
 
-// Whether to use binary transport.
-const USE_BINARY = os.platform() !== "win32";
-
 function startServer() {
   var app = express();
   expressWs(app);
@@ -36,15 +33,15 @@ function startServer() {
   app.post('/terminals', (req, res) => {
     const env = Object.assign({}, process.env);
     env['COLORTERM'] = 'truecolor';
-    var cols = parseInt(req.query.cols),
+    const cols = parseInt(req.query.cols),
       rows = parseInt(req.query.rows),
-      term = pty.spawn(process.platform === 'win32' ? 'cmd.exe' : 'bash', [], {
+      term = pty.spawn('bash', [], {
         name: 'xterm-256color',
         cols: cols || 80,
         rows: rows || 24,
         cwd: env.GITPOD_REPO_ROOT || env.PWD,
         env: env,
-        encoding: USE_BINARY ? null : 'utf8'
+        encoding: null
       });
 
     console.log('Created terminal with PID: ' + term.pid);
@@ -58,19 +55,19 @@ function startServer() {
   });
 
   app.post('/terminals/:pid/size', (req, res) => {
-    var pid = parseInt(req.params.pid),
+    const pid = parseInt(req.params.pid),
         cols = parseInt(req.query.cols),
         rows = parseInt(req.query.rows),
         term = terminals[pid];
 
     term.resize(cols, rows);
-    console.log('Resized terminal ' + pid + ' to ' + cols + ' cols and ' + rows + ' rows.');
+    console.log(`Resized terminal ${pid} to ${cols} cols and ${rows} rows.`);
     res.end();
   });
 
   app.ws('/terminals/:pid', function (ws, req) {
     var term = terminals[parseInt(req.params.pid)];
-    console.log('Connected to terminal ' + term.pid);
+    console.log(`Connected to terminal ${term.pid}`);
     ws.send(logs[term.pid]);
 
     // string message buffering
@@ -106,7 +103,7 @@ function startServer() {
         }
       };
     }
-    const send = USE_BINARY ? bufferUtf8(ws, 5) : buffer(ws, 5);
+    const send = bufferUtf8(ws, 5);
 
     // WARNING: This is a naive implementation that will not throttle the flow of data. This means
     // it could flood the communication channel and make the terminal unresponsive. Learn more about
