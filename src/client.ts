@@ -90,7 +90,6 @@ reloadButton.onclick = () => location.reload();
 
 function handleDisconected(e: CloseEvent) {
     console.error(e);
-    alert(e);
     switch (e.code) {
         case 1005:
             output("For some reason the WebSocket closed. Reload?", {

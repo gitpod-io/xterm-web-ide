@@ -3,8 +3,7 @@
 # See License-AGPL.txt in the project root for license information.
 
 FROM alpine:latest as ide_installer
-COPY ./demo/ /ide/demo
-COPY ./node_modules /ide/node_modules
+COPY . /ide
 RUN chmod -R ugo+x /ide
 
 FROM scratch
