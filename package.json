@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "build": "rimraf out-tsc && tsc && rollup -c rollup.config.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/filiptronicek/xterm-web-ide.git"
@@ -11,6 +13,7 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/filiptronicek/xterm-web-ide/issues"
   },
@@ -20,8 +23,13 @@
     "xterm": "^5.1.0"
   },
   "devDependencies": {
+    "@open-wc/building-rollup": "^2.2.1",
+    "deepmerge": "^4.3.0",
     "express": "^4.18.2",
     "express-ws": "^5.0.2",
-    "node-pty": "^0.10.1"
+    "node-pty": "^0.10.1",
+    "rimraf": "^4.1.2",
+    "rollup": "^3.15.0",
+    "typescript": "^4.9.5"
   }
 }

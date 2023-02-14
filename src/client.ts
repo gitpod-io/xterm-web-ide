@@ -1,11 +1,16 @@
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { Terminal, ITerminalOptions } from 'xterm';
 
-let term;
-let protocol;
-let socketURL;
-let socket;
-let pid;
+export interface IWindowWithTerminal extends Window {
+    term: Terminal;
+  }
+  declare let window: IWindowWithTerminal;
+
+let term: any;
+let protocol: string;
+let socketURL: string;
+let socket: ReconnectingWebSocket;
+let pid: number;
 
 const terminalContainer = document.getElementById("terminal-container");
 
@@ -51,19 +56,25 @@ function createTerminal(element: HTMLElement): void {
 
         fetch(`/terminals?cols=${term.cols}&rows=${term.rows}`, { method: "POST" }).then((res) => {
             res.text().then((processId) => {
-                pid = processId;
+                pid = parseInt(processId);
                 socketURL += processId;
                 socket = new ReconnectingWebSocket(socketURL, [], {
                     connectionTimeout: 1000,
                     maxRetries: 20,
                 });
                 socket.onopen = runRealTerminal;
+                //@ts-ignore
                 socket.onclose = handleDisconected;
+                //@ts-ignore
                 socket.onerror = handleDisconected;
             });
         });
     }, 0);
 }
+
+const reloadButton = document.createElement("button");
+reloadButton.innerText = "Reload";
+reloadButton.onclick = () => location.reload();
 
 function handleDisconected(e: CloseEvent) {
     console.error(e);
