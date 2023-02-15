@@ -8,6 +8,8 @@ import { WebglAddon } from "xterm-addon-webgl";
 import { Unicode11Addon } from "xterm-addon-unicode11";
 // todo: this does not work and results in ESM issues import { LigaturesAddon } from "xterm-addon-ligatures";
 
+import { resizeRemoteTerminal } from "./lib/remote";
+
 export interface IWindowWithTerminal extends Window {
     term: Terminal;
 }
@@ -42,15 +44,8 @@ function createTerminal(element: HTMLElement): void {
     } as ITerminalOptions);
 
     window.term = term; // Expose `term` to window for debugging purposes
-    term.onResize((size: { cols: number; rows: number }) => {
-        if (!pid) {
-            return;
-        }
-        const cols = size.cols;
-        const rows = size.rows;
-        const url = `/terminals/${pid}/size?cols=${cols}&rows=${rows}`;
-
-        fetch(url, { method: "POST" });
+    term.onResize((size) => {
+        resizeRemoteTerminal(size, pid);
     });
     protocol = location.protocol === "https:" ? "wss://" : "ws://";
     socketURL = `${protocol + location.hostname + (location.port ? ":" + location.port : "")
