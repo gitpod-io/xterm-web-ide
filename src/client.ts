@@ -69,7 +69,10 @@ function createTerminal(element: HTMLElement): void {
                     connectionTimeout: 1000,
                     maxRetries: 20,
                 });
-                socket.onopen = () => runRealTerminal(term);
+                socket.onopen = () => {
+                    outputDialog.close();
+                    runRealTerminal(term, socket as WebSocket); 
+                };
                 //@ts-ignore
                 socket.onclose = handleDisconnected;
                 //@ts-ignore
@@ -135,8 +138,8 @@ const unicodeAddon = new Unicode11Addon();
 
 let attachAddon: AttachAddon;
 
-function runRealTerminal(terminal: Terminal): void {
-    attachAddon = new AttachAddon(socket as WebSocket);
+function runRealTerminal(terminal: Terminal, socket: WebSocket): void {
+    attachAddon = new AttachAddon(socket);
     terminal.loadAddon(attachAddon);
     initAddons(term);
 }
