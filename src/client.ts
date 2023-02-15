@@ -76,9 +76,9 @@ function createTerminal(element: HTMLElement): void {
                 });
                 socket.onopen = () => runRealTerminal(term);
                 //@ts-ignore
-                socket.onclose = handleDisconected;
+                socket.onclose = handleDisconnected;
                 //@ts-ignore
-                socket.onerror = handleDisconected;
+                socket.onerror = handleDisconnected;
             });
         });
     }, 0);
@@ -88,7 +88,7 @@ const reloadButton = document.createElement("button");
 reloadButton.innerText = "Reload";
 reloadButton.onclick = () => location.reload();
 
-function handleDisconected(e: CloseEvent) {
+function handleDisconnected(e: CloseEvent) {
     switch (e.code) {
         case 1001:
             // This error happens every page reload, ignore
