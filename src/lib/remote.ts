@@ -1,5 +1,3 @@
-import { Terminal } from "xterm";
-
 export const resizeRemoteTerminal = (size: { cols: number; rows: number }, pid: number) => {
     if (!pid) {
         return;
