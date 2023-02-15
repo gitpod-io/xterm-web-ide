@@ -85,6 +85,10 @@ reloadButton.onclick = () => location.reload();
 
 function handleDisconnected(e: CloseEvent) {
     switch (e.code) {
+        case 1000:
+            if (e.reason === "timeout") {
+                location.reload();
+            }
         case 1001:
             // This error happens every page reload, ignore
             break;
