@@ -112,13 +112,12 @@ function handleDisconnected(e: CloseEvent) {
     console.error(e);
 }
 
-const outputDialog = document.getElementById("output")!;
+const outputDialog = document.getElementById("output") as HTMLDialogElement;
 const outputContent = document.getElementById("outputContent")!;
 function output(
     message: string,
     options?: { formActions: HTMLInputElement[] | HTMLButtonElement[] }
 ) {
-    //@ts-ignore
     if (typeof outputDialog.showModal === "function") {
         outputContent.innerText = message;
         if (options?.formActions) {
@@ -126,7 +125,6 @@ function output(
                 outputDialog.querySelector("form")!.appendChild(action);
             }
         }
-        //@ts-ignore
         outputDialog.showModal();
     }
 }
