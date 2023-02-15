@@ -67,7 +67,10 @@ function createTerminal(element: HTMLElement): void {
                 socketURL += processId;
                 socket = new ReconnectingWebSocket(socketURL, [], {
                     connectionTimeout: 1000,
-                    maxRetries: 20,
+                    reconnectionDelayGrowFactor: 1.1,
+                    maxReconnectionDelay: 7000,
+                    minReconnectionDelay: 500,
+                    maxRetries: 70,
                 });
                 socket.onopen = () => {
                     outputDialog.close();
