@@ -27,6 +27,24 @@ if (terminalContainer) {
     createTerminal(terminalContainer);
 }
 
+const fitAddon = new FitAddon();
+const webglAddon = new WebglAddon();
+const webLinksAddon = new WebLinksAddon();
+const unicodeAddon = new Unicode11Addon();
+
+function initAddons(term: Terminal): void {
+    term.loadAddon(fitAddon);
+    term.loadAddon(webglAddon);
+    term.loadAddon(webLinksAddon);
+    term.loadAddon(unicodeAddon);
+
+    term.unicode.activeVersion = '11';
+
+    webglAddon.onContextLoss(() => {
+        webglAddon.dispose();
+    });
+}
+
 function createTerminal(element: HTMLElement): void {
     // Clean terminal
     while (element.children.length) {
@@ -132,24 +150,13 @@ function output(
     }
 }
 
-const fitAddon = new FitAddon();
-const webglAddon = new WebglAddon();
-const webLinksAddon = new WebLinksAddon();
-const unicodeAddon = new Unicode11Addon();
-
 let attachAddon: AttachAddon;
 
 function runRealTerminal(terminal: Terminal, socket: WebSocket): void {
     attachAddon = new AttachAddon(socket);
     terminal.loadAddon(attachAddon);
     initAddons(term);
-}
 
-function initAddons(term: Terminal): void {
-    term.loadAddon(fitAddon);
-    term.loadAddon(webglAddon);
-    term.loadAddon(webLinksAddon);
-    term.loadAddon(unicodeAddon);
 }
 
 function updateTerminalSize(): void {
