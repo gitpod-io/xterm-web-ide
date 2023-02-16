@@ -10,6 +10,7 @@ import { Unicode11Addon } from "xterm-addon-unicode11";
 
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IWindowWithTerminal } from "./lib/types";
+import { webLinksHandler } from "./lib/addons";
 
 declare let window: IWindowWithTerminal;
 
@@ -29,7 +30,7 @@ if (terminalContainer) {
 
 const fitAddon = new FitAddon();
 const webglAddon = new WebglAddon();
-const webLinksAddon = new WebLinksAddon();
+const webLinksAddon = new WebLinksAddon(webLinksHandler);
 const unicodeAddon = new Unicode11Addon();
 
 function initAddons(term: Terminal): void {
