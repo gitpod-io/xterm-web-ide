@@ -23,6 +23,7 @@ function startServer() {
   });
 
   app.use('/dist', express.static(__dirname + '/dist'));
+  app.use('/src', express.static(__dirname + '/src'));
 
   app.post('/terminals', (req, res) => {
     const env = Object.assign({}, process.env);
