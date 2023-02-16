@@ -123,7 +123,7 @@ function handleDisconnected(e: CloseEvent) {
             break;
         case 1005:
             output("For some reason the WebSocket closed. Reload?", {
-                formActions: [reloadButton],
+                formActions: [reconnectButton, reloadButton],
             });
         case 1006:
             if (navigator.onLine) {
