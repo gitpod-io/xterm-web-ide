@@ -96,14 +96,20 @@ function createTerminal(element: HTMLElement): void {
                 socket.onclose = handleDisconnected;
                 //@ts-ignore
                 socket.onerror = handleDisconnected;
+
+                window.socket = socket;
             });
         });
     }, 0);
 }
 
 const reloadButton = document.createElement("button");
-reloadButton.innerText = "Reload";
+reloadButton.innerText = "Reload page";
 reloadButton.onclick = () => location.reload();
+
+const reconnectButton = document.createElement("button");
+reconnectButton.innerText = "Reconnect";
+reconnectButton.onclick = () => socket.reconnect();
 
 function handleDisconnected(e: CloseEvent) {
     switch (e.code) {
