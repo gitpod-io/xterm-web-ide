@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf out-tsc && tsc && rollup -c rollup.config.js",
+    "build": "npm rebuild && rimraf out-tsc && tsc && rollup -c rollup.config.js",
     "start:server": "node server.cjs"
   },
   "repository": {
