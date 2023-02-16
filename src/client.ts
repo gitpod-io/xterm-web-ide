@@ -9,10 +9,8 @@ import { Unicode11Addon } from "xterm-addon-unicode11";
 // todo: this does not work and results in ESM issues import { LigaturesAddon } from "xterm-addon-ligatures";
 
 import { resizeRemoteTerminal } from "./lib/remote";
+import { IWindowWithTerminal } from "./lib/types";
 
-export interface IWindowWithTerminal extends Window {
-    term: Terminal;
-}
 declare let window: IWindowWithTerminal;
 
 let term: Terminal;

@@ -4,8 +4,13 @@ import { WebLinksAddon } from 'xterm-addon-web-links';
 import { WebglAddon } from 'xterm-addon-webgl';
 import { Unicode11Addon } from 'xterm-addon-unicode11';
 import { LigaturesAddon } from 'xterm-addon-ligatures';
+import { Terminal } from 'xterm';
 
 export type AddonType = "attach" | "fit" | "unicode11" | "web-links" | "webgl" | "ligatures";
+
+export interface IWindowWithTerminal extends Window {
+  term: Terminal;
+}
 
 export interface Addon<T extends AddonType> {
     name: T;
