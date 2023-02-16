@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "npm rebuild && rimraf dist && rollup -c rollup.config.js",
+    "watch": "rollup -c rollup.config.js -w",
     "start:server": "node server.cjs"
   },
   "repository": {
