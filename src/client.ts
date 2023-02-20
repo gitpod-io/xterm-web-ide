@@ -83,7 +83,7 @@ function createTerminal(element: HTMLElement): void {
                 pid = parseInt(processId);
                 socketURL += processId;
                 socket = new ReconnectingWebSocket(socketURL, [], {
-                    connectionTimeout: 1000,
+                    connectionTimeout: 5000,
                     reconnectionDelayGrowFactor: 1.1,
                     maxReconnectionDelay: 7000,
                     minReconnectionDelay: 500,
