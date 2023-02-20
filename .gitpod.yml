@@ -3,6 +3,8 @@ image: gitpod/workspace-node
 tasks:
   - init: nvm use && yarn install && yarn build
     command: PORT=3000 yarn start:server
+  - init: docker pull gitpod/workspace-node
+    command: exit
 vscode:
   extensions:
     - dbaeumer.vscode-eslint
