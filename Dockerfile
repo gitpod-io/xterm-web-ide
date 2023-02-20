@@ -2,9 +2,13 @@
 # Licensed under the GNU Affero General Public License (AGPL).
 # See License-AGPL.txt in the project root for license information.
 
-FROM alpine:latest as ide_installer
+FROM node:16-alpine3.16 as ide_installer
+RUN apk add --no-cache make gcc g++ python3
 COPY . /ide
-RUN chmod -R ugo+x /ide
+WORKDIR /ide
+RUN yarn --frozen-lockfile --network-timeout 180000 && \
+    yarn build && \
+    chmod -R ugo+x /ide
 
 FROM scratch
 # copy static web resources in first layer to serve from blobserve
