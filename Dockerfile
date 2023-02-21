@@ -3,6 +3,7 @@
 # See License-AGPL.txt in the project root for license information.
 
 FROM node:16 as ide_installer
+RUN apt update && apt install python3
 COPY . /ide
 WORKDIR /ide
 RUN yarn --frozen-lockfile --network-timeout 180000 && \

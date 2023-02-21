@@ -1,4 +1,5 @@
-image: gitpod/workspace-node
+image:
+  file: .gitpod.Dockerfile
 
 tasks:
   - init: nvm install && yarn install && yarn build
