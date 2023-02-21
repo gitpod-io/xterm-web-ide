@@ -28,6 +28,14 @@ if (terminalContainer) {
     createTerminal(terminalContainer);
 }
 
+const webSocketSettings: ReconnectingWebSocket['_options'] = {
+    connectionTimeout: 5000,
+    maxReconnectionDelay: 7000,
+    minReconnectionDelay: 500,
+    maxRetries: 70,
+    debug: true,
+}
+
 const fitAddon = new FitAddon();
 const webglAddon = new WebglAddon();
 const webLinksAddon = new WebLinksAddon(webLinksHandler);
@@ -82,16 +90,19 @@ function createTerminal(element: HTMLElement): void {
             res.text().then((processId) => {
                 pid = parseInt(processId);
                 socketURL += processId;
-                socket = new ReconnectingWebSocket(socketURL, [], {
-                    connectionTimeout: 5000,
-                    reconnectionDelayGrowFactor: 1.1,
-                    maxReconnectionDelay: 7000,
-                    minReconnectionDelay: 500,
-                    maxRetries: 70,
-                });
+                socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
                 socket.onopen = () => {
                     outputDialog.close();
-                    runRealTerminal(term, socket as WebSocket); 
+
+                    try {
+                        // Fix for weird supervisor-frontend behavior
+                        (document.querySelector(".gitpod-frame") as HTMLDivElement).style.visibility = 'hidden';
+                        (document.querySelector("body") as HTMLBodyElement).style.visibility = "visible";
+                    } catch { } finally {
+                        (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus()
+                    }
+
+                    runRealTerminal(term, socket as WebSocket);
                 };
                 //@ts-ignore
                 socket.onclose = handleDisconnected;
@@ -113,6 +124,12 @@ reconnectButton.innerText = "Reconnect";
 reconnectButton.onclick = () => socket.reconnect();
 
 function handleDisconnected(e: CloseEvent) {
+
+    if (socket.retryCount < webSocketSettings.maxRetries) {
+        console.info("Tried to reconnect WS")
+        return;
+    }
+
     switch (e.code) {
         case 1000:
             if (e.reason === "timeout") {
@@ -160,10 +177,10 @@ function output(
 let attachAddon: AttachAddon;
 
 function runRealTerminal(terminal: Terminal, socket: WebSocket): void {
+    console.info("WS connection established. Trying to attach it to the terminal");
     attachAddon = new AttachAddon(socket);
     terminal.loadAddon(attachAddon);
     initAddons(term);
-
 }
 
 function updateTerminalSize(): void {

@@ -9,20 +9,12 @@ function startServer() {
   const terminals = {},
       logs = {};
 
-  app.use('/styles.css', express.static(__dirname + '/assets/styles.css'));
-  app.get('/logo.png', (req, res) => { // lgtm [js/missing-rate-limiting]
-    res.sendFile(__dirname + '/logo.png');
-  });
-
   app.get('/', (_req, res) => { // lgtm [js/missing-rate-limiting]
     res.sendFile(__dirname + '/index.html');
   });
 
-  app.get('/style.css', (_req, res) => { // lgtm [js/missing-rate-limiting]
-    res.sendFile(__dirname + '/style.css');
-  });
-
   app.use('/dist', express.static(__dirname + '/dist'));
+  app.use('/assets', express.static(__dirname + '/assets'));
   app.use('/src', express.static(__dirname + '/src'));
 
   app.post('/terminals', (req, res) => {
