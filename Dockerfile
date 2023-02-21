@@ -2,8 +2,8 @@
 # Licensed under the GNU Affero General Public License (AGPL).
 # See License-AGPL.txt in the project root for license information.
 
-FROM node:16-alpine3.16 as ide_installer
-RUN apk add --no-cache make gcc g++ python3 musl-dev
+FROM node:16 as ide_installer
+RUN apt update && apt install python3
 COPY . /ide
 WORKDIR /ide
 RUN yarn --frozen-lockfile --network-timeout 180000 && \
