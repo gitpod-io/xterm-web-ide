@@ -6,7 +6,9 @@
   "scripts": {
     "build": "npm rebuild && rimraf dist && rollup -c rollup.config.js",
     "watch": "rollup -c rollup.config.js -w",
-    "start:server": "node server.cjs"
+    "start:server": "node server.cjs",
+    "package:client": "rimraf out/ && yarn build && mkdir -p out/ && cp -r index.html dist/ assets/ out/",
+    "package:server": "npx ncc build -m server.cjs -o out-server/"
   },
   "repository": {
     "type": "git",
