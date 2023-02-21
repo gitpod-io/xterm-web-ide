@@ -93,7 +93,16 @@ function createTerminal(element: HTMLElement): void {
                 socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
                 socket.onopen = () => {
                     outputDialog.close();
-                    runRealTerminal(term, socket as WebSocket); 
+
+                    try {
+                        // Fix for weird supervisor-frontend behavior
+                        (document.querySelector(".gitpod-frame") as HTMLDivElement).style.visibility = 'hidden';
+                        (document.querySelector("body") as HTMLBodyElement).style.visibility = "visible";
+                    } catch { } finally {
+                        (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus()
+                    }
+
+                    runRealTerminal(term, socket as WebSocket);
                 };
                 //@ts-ignore
                 socket.onclose = handleDisconnected;
@@ -116,8 +125,8 @@ reconnectButton.onclick = () => socket.reconnect();
 
 function handleDisconnected(e: CloseEvent) {
 
-    if (socket.retryCount <= webSocketSettings.maxRetries) {
-        console.info("Trying to reconnect")
+    if (socket.retryCount < webSocketSettings.maxRetries) {
+        console.info("Tried to reconnect WS")
         return;
     }
 
@@ -168,10 +177,10 @@ function output(
 let attachAddon: AttachAddon;
 
 function runRealTerminal(terminal: Terminal, socket: WebSocket): void {
+    console.info("WS connection established. Trying to attach it to the terminal");
     attachAddon = new AttachAddon(socket);
     terminal.loadAddon(attachAddon);
     initAddons(term);
-
 }
 
 function updateTerminalSize(): void {
