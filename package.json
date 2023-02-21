@@ -8,7 +8,7 @@
     "watch": "rollup -c rollup.config.js -w",
     "start:server": "node server.cjs",
     "package:client": "rimraf out/ && yarn build && mkdir -p out/ && cp -r index.html dist/ assets/ out/",
-    "package:server": "npx ncc build -m server.cjs -o out-server/"
+    "package:server": "ncc build -m server.cjs -o out-server/"
   },
   "repository": {
     "type": "git",
@@ -36,6 +36,7 @@
     "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-terser": "^0.4.0",
     "@rollup/plugin-typescript": "^11.0.0",
+    "@vercel/ncc": "^0.36.1",
     "deepmerge": "^4.3.0",
     "express": "^4.18.2",
     "express-ws": "^5.0.2",
