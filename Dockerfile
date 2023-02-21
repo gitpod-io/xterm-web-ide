@@ -14,7 +14,7 @@ RUN chmod -R ugo+x /ide
 
 FROM scratch
 # copy static web resources in first layer to serve from blobserve
-COPY --chown=33333:33333 --from=ide_installer /ide /ide/xterm
-COPY --chown=33333:33333 --from=ide_installer /ide-prepare/out-server/ /ide-prepare/node_modules/node/bin/node /ide/xterm/
-COPY --chown=33333:33333 startup.sh /ide/xterm/
+COPY --chown=33333:33333 --from=ide_installer /ide /ide/
+COPY --chown=33333:33333 --from=ide_installer /ide-prepare/out-server/ /ide/
+COPY --chown=33333:33333 --from=ide_installer /ide-prepare/node_modules/node/bin/node /ide/bin/
 COPY --chown=33333:33333 startup.sh supervisor-ide-config.json /ide/
