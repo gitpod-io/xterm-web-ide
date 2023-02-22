@@ -1,17 +1,11 @@
 /// <reference types='@gitpod/gitpod-protocol/lib/typings/globals'/>
 
-import type { IDEFrontendState } from '@gitpod/gitpod-protocol/lib/ide-frontend-service';
-import ReconnectingWebSocket from 'reconnecting-websocket';
-import { Disposable, DisposableCollection } from "@gitpod/gitpod-protocol/lib/util/disposable";
-import { Emitter } from '@gitpod/gitpod-protocol/lib/util/event';
-
+import { IDEFrontendState } from "@gitpod/gitpod-protocol/lib/ide-frontend-service";
+import ReconnectingWebSocket from "reconnecting-websocket";
 
 export const initiateSupervisorClient = async (socket: ReconnectingWebSocket, devMode = true) => {
 	let _state: IDEFrontendState = 'init';
 	let _failureCause: Error | undefined;
-    const onDidChangeEmitter = new Emitter<void>();
-    const toStop = new DisposableCollection();
-    toStop.push(onDidChangeEmitter);
 
 	const doStart = async () => {
 		console.debug("Starting IDE socket");
@@ -19,8 +13,10 @@ export const initiateSupervisorClient = async (socket: ReconnectingWebSocket, de
 	};
 
 	if (devMode) {
+		console.debug("Starting in dev mode (can't access window.gitpod)")
 		await doStart();
 	} else {
+		console.debug("Delaying the websocket until supervisor signal")
 		window.gitpod.ideService = {
 			get state() {
 				return _state;
@@ -28,21 +24,16 @@ export const initiateSupervisorClient = async (socket: ReconnectingWebSocket, de
 			get failureCause() {
 				return _failureCause;
 			},
-			onDidChange: onDidChangeEmitter.event,
+			//@ts-ignore
 			start: () => {
 				if (_state === "terminated") {
-					
+					console.debug("Got state terminated, closing the WebSocket...");
+					socket.close();
 				}
 				_state = "ready";
-				toStop.push(
-					Disposable.create(() => {
-						_state = "terminated";
-						onDidChangeEmitter.fire();
-					}),
-				);
-	
+
 				doStart();
-				return toStop;
+				return [];
 			}
 		};
 	}

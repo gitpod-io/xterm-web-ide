@@ -56,6 +56,8 @@ function initAddons(term: Terminal): void {
     });
 }
 
+let initialOpen = true;
+
 function createTerminal(element: HTMLElement): void {
     // Clean terminal
     while (element.children.length) {
@@ -110,6 +112,12 @@ function createTerminal(element: HTMLElement): void {
                 socket.onclose = handleDisconnected;
                 //@ts-ignore
                 socket.onerror = handleDisconnected;
+
+                if (initialOpen) {
+                    console.debug("Initiating supervisor client for frontend");
+                    initiateSupervisorClient(socket as ReconnectingWebSocket, !window.gitpod);
+                    initialOpen = false;
+                }
 
                 window.socket = socket;
             });
@@ -180,7 +188,6 @@ let attachAddon: AttachAddon;
 
 async function runRealTerminal(terminal: Terminal, socket: WebSocket): Promise<void> {
     console.info("WS connection established. Trying to attach it to the terminal");
-    await initiateSupervisorClient(socket as ReconnectingWebSocket, !window.gitpod);
     attachAddon = new AttachAddon(socket);
     terminal.loadAddon(attachAddon);
     initAddons(term);
