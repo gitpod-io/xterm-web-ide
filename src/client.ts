@@ -1,5 +1,5 @@
-import ReconnectingWebSocket from "reconnecting-websocket";
-import { Terminal, ITerminalOptions } from "xterm";
+import type ReconnectingWebSocket from "reconnecting-websocket";
+import type { Terminal, ITerminalOptions } from "xterm";
 
 import { AttachAddon } from "xterm-addon-attach";
 import { FitAddon } from "xterm-addon-fit";
@@ -58,7 +58,7 @@ function initAddons(term: Terminal): void {
 
 let initialOpen = true;
 
-function createTerminal(element: HTMLElement): void {
+async function createTerminal(element: HTMLElement): Promise<void> {
     // Clean terminal
     while (element.children.length) {
         element.removeChild(element.children[0]);
@@ -66,6 +66,9 @@ function createTerminal(element: HTMLElement): void {
 
     const isWindows =
         ["Windows", "Win16", "Win32", "WinCE"].indexOf(navigator.platform) >= 0;
+
+    const { Terminal } = (await import("xterm"));
+
     term = new Terminal({
         windowsMode: isWindows,
         fontFamily: defaultFonts.join(", "),
@@ -85,8 +88,10 @@ function createTerminal(element: HTMLElement): void {
     term.focus();
 
     // fit is called within a setTimeout, cols and rows need this.
-    setTimeout(() => {
+    setTimeout(async () => {
         updateTerminalSize();
+
+        const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
 
         fetch(`/terminals?cols=${term.cols}&rows=${term.rows}`, {
             method: "POST",

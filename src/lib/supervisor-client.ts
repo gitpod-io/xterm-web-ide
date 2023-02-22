@@ -41,6 +41,13 @@ export const initiateSupervisorClient = async (socket: ReconnectingWebSocket, de
 					socket.close();
 				}));
 
+				toStop.push(
+					Disposable.create(() => {
+						_state = "terminated";
+						onDidChangeEmitter.fire();
+					}),
+				);
+
 				_state = "ready";
 
 				doStart();
