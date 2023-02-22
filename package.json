@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/filiptronicek/xterm-web-ide#readme",
   "dependencies": {
+    "@gitpod/gitpod-protocol": "^0.1.5-main.6648",
     "node": "16",
     "reconnecting-websocket": "^4.4.0",
     "xterm": "^5.1.0",

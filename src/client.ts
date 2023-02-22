@@ -11,6 +11,7 @@ import { Unicode11Addon } from "xterm-addon-unicode11";
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IWindowWithTerminal } from "./lib/types";
 import { webLinksHandler } from "./lib/addons";
+import { initiateSupervisorClient } from "./lib/supervisor-client";
 
 declare let window: IWindowWithTerminal;
 
@@ -34,6 +35,7 @@ const webSocketSettings: ReconnectingWebSocket['_options'] = {
     minReconnectionDelay: 500,
     maxRetries: 70,
     debug: true,
+    startClosed: true,
 }
 
 const fitAddon = new FitAddon();
@@ -91,7 +93,7 @@ function createTerminal(element: HTMLElement): void {
                 pid = parseInt(processId);
                 socketURL += processId;
                 socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
-                socket.onopen = () => {
+                socket.onopen = async () => {
                     outputDialog.close();
 
                     try {
@@ -102,7 +104,7 @@ function createTerminal(element: HTMLElement): void {
                         (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus()
                     }
 
-                    runRealTerminal(term, socket as WebSocket);
+                    await runRealTerminal(term, socket as WebSocket);
                 };
                 //@ts-ignore
                 socket.onclose = handleDisconnected;
@@ -176,8 +178,9 @@ function output(
 
 let attachAddon: AttachAddon;
 
-function runRealTerminal(terminal: Terminal, socket: WebSocket): void {
+async function runRealTerminal(terminal: Terminal, socket: WebSocket): Promise<void> {
     console.info("WS connection established. Trying to attach it to the terminal");
+    await initiateSupervisorClient(socket as ReconnectingWebSocket, !window.gitpod);
     attachAddon = new AttachAddon(socket);
     terminal.loadAddon(attachAddon);
     initAddons(term);
