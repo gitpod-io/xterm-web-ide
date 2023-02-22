@@ -44,6 +44,7 @@
     "node-pty": "^0.10.1",
     "rimraf": "^4.1.2",
     "rollup": "^3.15.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
     "rollup-plugin-polyfill-node": "^0.12.0",
     "typescript": "^4.9.5",
     "xterm-addon-ligatures": "^0.6.0",
