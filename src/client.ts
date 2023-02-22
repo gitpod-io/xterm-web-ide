@@ -35,7 +35,7 @@ const webSocketSettings: ReconnectingWebSocket['_options'] = {
     startClosed: true,
 }
 
-const extraTerminalAddons: {[key: string]: ITerminalAddon} = {};
+const extraTerminalAddons: { [key: string]: ITerminalAddon } = {};
 
 (async () => {
     extraTerminalAddons['ligatures'] = new (await import("xterm-addon-ligatures")).LigaturesAddon();
@@ -95,40 +95,46 @@ async function createTerminal(element: HTMLElement): Promise<void> {
 
         const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
 
-        fetch(`/terminals?cols=${term.cols}&rows=${term.rows}`, {
+        const initialTerminalResizeRequest = await fetch(`/terminals?cols=${term.cols}&rows=${term.rows}`, {
             method: "POST",
-        }).then((res) => {
-            res.text().then((processId) => {
-                pid = parseInt(processId);
-                socketURL += processId;
-                socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
-                socket.onopen = async () => {
-                    outputDialog.close();
-
-                    try {
-                        // Fix for weird supervisor-frontend behavior
-                        (document.querySelector(".gitpod-frame") as HTMLDivElement).style.visibility = 'hidden';
-                        (document.querySelector("body") as HTMLBodyElement).style.visibility = "visible";
-                    } catch { } finally {
-                        (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus()
-                    }
-
-                    await runRealTerminal(term, socket as WebSocket);
-                };
-                //@ts-ignore
-                socket.onclose = handleDisconnected;
-                //@ts-ignore
-                socket.onerror = handleDisconnected;
-
-                if (initialOpen) {
-                    console.debug("Initiating supervisor client for frontend");
-                    initiateSupervisorClient(socket as ReconnectingWebSocket, !window.gitpod);
-                    initialOpen = false;
-                }
-
-                window.socket = socket;
-            });
         });
+
+        if (!initialTerminalResizeRequest.ok) {
+            output("Could not setup IDE. Reload?", {
+                formActions: [reloadButton],
+            });
+        }
+
+        const serverProcessId = await initialTerminalResizeRequest.text();
+
+        pid = parseInt(serverProcessId);
+        socketURL += serverProcessId;
+        socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
+        socket.onopen = async () => {
+            outputDialog.close();
+
+            try {
+                // Fix for weird supervisor-frontend behavior
+                (document.querySelector(".gitpod-frame") as HTMLDivElement).style.visibility = 'hidden';
+                (document.querySelector("body") as HTMLBodyElement).style.visibility = "visible";
+            } catch { } finally {
+                (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus()
+            }
+
+            await runRealTerminal(term, socket as WebSocket);
+        };
+        //@ts-ignore
+        socket.onclose = handleDisconnected;
+        //@ts-ignore
+        socket.onerror = handleDisconnected;
+
+        if (initialOpen) {
+            console.debug("Initiating supervisor client for frontend");
+            initiateSupervisorClient(socket as ReconnectingWebSocket, !window.gitpod);
+            initialOpen = false;
+        }
+
+        window.socket = socket;
     }, 0);
 }
 
