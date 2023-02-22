@@ -6,7 +6,7 @@ import { FitAddon } from "xterm-addon-fit";
 import { WebLinksAddon } from "xterm-addon-web-links";
 import { WebglAddon } from "xterm-addon-webgl";
 import { Unicode11Addon } from "xterm-addon-unicode11";
-// todo: this does not work and results in ESM issues import { LigaturesAddon } from "xterm-addon-ligatures";
+import { LigaturesAddon } from "xterm-addon-ligatures";
 
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IWindowWithTerminal } from "./lib/types";
@@ -42,12 +42,14 @@ const fitAddon = new FitAddon();
 const webglAddon = new WebglAddon();
 const webLinksAddon = new WebLinksAddon(webLinksHandler);
 const unicodeAddon = new Unicode11Addon();
+const ligaturesAddon = new LigaturesAddon();
 
 function initAddons(term: Terminal): void {
     term.loadAddon(fitAddon);
     term.loadAddon(webglAddon);
     term.loadAddon(webLinksAddon);
     term.loadAddon(unicodeAddon);
+    term.loadAddon(ligaturesAddon);
 
     term.unicode.activeVersion = '11';
 
