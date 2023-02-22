@@ -1,12 +1,9 @@
 import type ReconnectingWebSocket from "reconnecting-websocket";
-import type { Terminal, ITerminalOptions } from "xterm";
+import type { Terminal, ITerminalOptions, ITerminalAddon } from "xterm";
 
 import { AttachAddon } from "xterm-addon-attach";
 import { FitAddon } from "xterm-addon-fit";
-import { WebLinksAddon } from "xterm-addon-web-links";
-import { WebglAddon } from "xterm-addon-webgl";
-import { Unicode11Addon } from "xterm-addon-unicode11";
-import { LigaturesAddon } from "xterm-addon-ligatures";
+import type { WebglAddon } from "xterm-addon-webgl";
 
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IWindowWithTerminal } from "./lib/types";
@@ -38,23 +35,26 @@ const webSocketSettings: ReconnectingWebSocket['_options'] = {
     startClosed: true,
 }
 
-const fitAddon = new FitAddon();
-const webglAddon = new WebglAddon();
-const webLinksAddon = new WebLinksAddon(webLinksHandler);
-const unicodeAddon = new Unicode11Addon();
-const ligaturesAddon = new LigaturesAddon();
+const extraTerminalAddons: {[key: string]: ITerminalAddon} = {};
+
+(async () => {
+    extraTerminalAddons['ligatures'] = new (await import("xterm-addon-ligatures")).LigaturesAddon();
+    extraTerminalAddons['fit'] = new (await import("xterm-addon-fit")).FitAddon();
+    extraTerminalAddons['unicode'] = new (await import("xterm-addon-unicode11")).Unicode11Addon();
+    extraTerminalAddons['webLinks'] = new (await import("xterm-addon-web-links")).WebLinksAddon(webLinksHandler);
+    extraTerminalAddons['webgl'] = new (await import("xterm-addon-webgl")).WebglAddon;
+})()
 
 function initAddons(term: Terminal): void {
-    term.loadAddon(fitAddon);
-    term.loadAddon(webglAddon);
-    term.loadAddon(webLinksAddon);
-    term.loadAddon(unicodeAddon);
-    term.loadAddon(ligaturesAddon);
+
+    for (const addon of Object.values(extraTerminalAddons)) {
+        term.loadAddon(addon);
+    }
 
     term.unicode.activeVersion = '11';
 
-    webglAddon.onContextLoss(() => {
-        webglAddon.dispose();
+    (extraTerminalAddons['webgl'] as WebglAddon).onContextLoss(() => {
+        extraTerminalAddons['webgl'].dispose();
     });
 }
 
@@ -201,7 +201,6 @@ async function runRealTerminal(terminal: Terminal, socket: WebSocket): Promise<v
 }
 
 function updateTerminalSize(): void {
-    //@ts-ignore
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
     fitAddon.fit();
