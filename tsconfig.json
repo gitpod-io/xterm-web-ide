@@ -1,15 +1,19 @@
 {
   "compilerOptions": {
-    "target": "es2018",                          
-    "module": "esnext",
-    "moduleResolution": "node",                     
-    "noEmitOnError": true,
-    "lib": ["es2017"],                            
-    "strict": true,  
-    "esModuleInterop": false,                 
-    "outDir": "dist",
-    "rootDir": "./",
-    "sourceMap": true,
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "moduleResolution": "Node",
+    "strict": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true
   },
-  "include": ["./src/**/*.ts"]
+  "include": ["src"]
 }

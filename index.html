@@ -20,6 +20,10 @@
       src="/_supervisor/frontend/main.js"
       charset="utf-8"
     ></script>
-    <script src="dist/bundle.js" defer></script>
+    <script type="module">
+      import { Buffer } from "buffer";
+      window.Buffer = Buffer;
+    </script>   
+    <script src="src/client.ts" type="module" defer></script>
   </body>
 </html>
