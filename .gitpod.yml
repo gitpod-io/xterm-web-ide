@@ -2,10 +2,8 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: nvm install && yarn install && yarn build
-    command: PORT=3000 yarn start:server
-  - name: Client watch task 
-    command: yarn watch
+  - init: nvm install && yarn
+    command: PORT=3000 yarn start
   - init: docker pull gitpod/workspace-node
     command: exit
 vscode:
