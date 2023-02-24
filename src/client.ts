@@ -1,4 +1,5 @@
 import type ReconnectingWebSocket from "reconnecting-websocket";
+import fetchBuilder from "fetch-retry";
 import type { Terminal, ITerminalOptions, ITerminalAddon } from "xterm";
 
 import { AttachAddon } from "xterm-addon-attach";
@@ -8,10 +9,24 @@ import type { WebglAddon } from "xterm-addon-webgl";
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IWindowWithTerminal } from "./lib/types";
 import { webLinksHandler } from "./lib/addons";
-import { initiateSupervisorClient } from "./lib/supervisor-client";
 
-import fetchBuilder from 'fetch-retry'
-const fetch = fetchBuilder(window.fetch)
+const maxReconnectionRetries = 50;
+
+const fetchOptions = {
+    retries: maxReconnectionRetries,
+    retryDelay: (attempt: number, _error: Error, _response: Response) => {
+        return Math.pow(1.25, attempt) * 200;
+    },
+    retryOn: (attempt: number, error: Error, response: Response) => {
+        if (error !== null || response.status >= 400) {
+            console.log(`retrying, attempt number ${attempt + 1}, ${(Math.pow(1.25, attempt) * 300) / 1000}`);
+            return true;
+        } else {
+            console.warn("Not retrying")
+            return false;
+        }
+    }
+}
 
 declare let window: IWindowWithTerminal;
 
@@ -33,9 +48,8 @@ const webSocketSettings: ReconnectingWebSocket['_options'] = {
     connectionTimeout: 5000,
     maxReconnectionDelay: 7000,
     minReconnectionDelay: 500,
-    maxRetries: 70,
+    maxRetries: maxReconnectionRetries,
     debug: true,
-    // startClosed: true,
 }
 
 const extraTerminalAddons: { [key: string]: ITerminalAddon } = {};
@@ -61,7 +75,50 @@ function initAddons(term: Terminal): void {
     });
 }
 
-let initialOpen = true;
+async function initiateRemoteTerminal() {
+    updateTerminalSize();
+
+    const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
+
+    const fetcher = fetchBuilder(fetch, fetchOptions);
+    const initialTerminalResizeRequest = await fetcher(`/terminals?cols=${term.cols}&rows=${term.rows}`, {
+        method: "POST",
+        credentials: "include",
+    });
+
+    if (!initialTerminalResizeRequest.ok) {
+        output("Could not setup IDE. Retry?", {
+            formActions: [reloadButton],
+        });
+        return;
+    }
+
+    const serverProcessId = await initialTerminalResizeRequest.text();
+    console.debug(`Got PID from server: ${serverProcessId}`);
+
+    pid = parseInt(serverProcessId);
+    socketURL += serverProcessId;
+    socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
+    socket.onopen = async () => {
+        outputDialog.close();
+
+        try {
+            // Fix for weird supervisor-frontend behavior
+            (document.querySelector(".gitpod-frame") as HTMLDivElement).style.visibility = 'hidden';
+            (document.querySelector("body") as HTMLBodyElement).style.visibility = "visible";
+        } catch { } finally {
+            (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
+        }
+
+        await runRealTerminal(term, socket as WebSocket);
+    };
+    //@ts-ignore
+    socket.onclose = handleDisconnected;
+    //@ts-ignore
+    socket.onerror = handleDisconnected;
+
+    window.socket = socket;
+}
 
 async function createTerminal(element: HTMLElement): Promise<void> {
     // Clean terminal
@@ -94,53 +151,7 @@ async function createTerminal(element: HTMLElement): Promise<void> {
 
     // fit is called within a setTimeout, cols and rows need this.
     setTimeout(async () => {
-        updateTerminalSize();
-
-        const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
-
-        const initialTerminalResizeRequest = await fetch(`/terminals?cols=${term.cols}&rows=${term.rows}`, {
-            method: "POST",
-            credentials: "include",
-            retries: Infinity,
-            retryDelay: (attempt) => Math.pow(2, attempt) * 200
-        });
-
-        if (!initialTerminalResizeRequest.ok) {
-            output("Could not setup IDE. Reload?", {
-                formActions: [reloadButton],
-            });
-        }
-
-        const serverProcessId = await initialTerminalResizeRequest.text();
-
-        pid = parseInt(serverProcessId);
-        socketURL += serverProcessId;
-        socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
-        socket.onopen = async () => {
-            outputDialog.close();
-
-            try {
-                // Fix for weird supervisor-frontend behavior
-                (document.querySelector(".gitpod-frame") as HTMLDivElement).style.visibility = 'hidden';
-                (document.querySelector("body") as HTMLBodyElement).style.visibility = "visible";
-            } catch { } finally {
-                (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus()
-            }
-
-            await runRealTerminal(term, socket as WebSocket);
-        };
-        //@ts-ignore
-        socket.onclose = handleDisconnected;
-        //@ts-ignore
-        socket.onerror = handleDisconnected;
-
-        if (initialOpen) {
-            console.debug("Initiating supervisor client for frontend");
-            initiateSupervisorClient(socket as ReconnectingWebSocket, !window.gitpod);
-            initialOpen = false;
-        }
-
-        window.socket = socket;
+        await initiateRemoteTerminal();
     }, 0);
 }
 
