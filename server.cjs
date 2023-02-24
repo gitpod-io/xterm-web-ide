@@ -52,6 +52,7 @@ function startServer() {
       console.log(`Closed terminal ${term.pid}`);
     });
 
+    res.statusCode = 201; // HTTP 201 Created
     res.send(term.pid.toString());
     res.end();
   });
