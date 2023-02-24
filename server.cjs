@@ -7,7 +7,7 @@ function startServer() {
   expressWs(app);
 
   const terminals = {},
-      logs = {};
+    logs = {};
 
   app.get('/', (_req, res) => { // lgtm [js/missing-rate-limiting]
     res.sendFile(__dirname + '/index.html');
@@ -58,9 +58,9 @@ function startServer() {
 
   app.post('/terminals/:pid/size', (req, res) => {
     const pid = parseInt(req.params.pid),
-        cols = parseInt(req.query.cols),
-        rows = parseInt(req.query.rows),
-        term = terminals[pid];
+      cols = parseInt(req.query.cols),
+      rows = parseInt(req.query.rows),
+      term = terminals[pid];
 
     term.resize(cols, rows);
     console.log(`Resized terminal ${pid} to ${cols} cols and ${rows} rows.`);
@@ -116,7 +116,7 @@ function startServer() {
   });
 
   const port = process.env.PORT || 23000,
-      host = '0.0.0.0';
+    host = '0.0.0.0';
 
   console.log(`App listening to http://127.0.0.1:${port}`);
   app.listen(port, host);

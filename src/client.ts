@@ -9,6 +9,7 @@ import type { WebglAddon } from "xterm-addon-webgl";
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IWindowWithTerminal } from "./lib/types";
 import { webLinksHandler } from "./lib/addons";
+import { runFakeTerminal } from "./lib/fakeTerminal";
 
 const maxReconnectionRetries = 50;
 
@@ -151,7 +152,9 @@ async function createTerminal(element: HTMLElement): Promise<void> {
 
     // fit is called within a setTimeout, cols and rows need this.
     setTimeout(async () => {
+        const interval = runFakeTerminal(term);
         await initiateRemoteTerminal();
+        clearInterval(interval);
     }, 0);
 }
 
@@ -218,6 +221,7 @@ let attachAddon: AttachAddon;
 
 async function runRealTerminal(terminal: Terminal, socket: WebSocket): Promise<void> {
     console.info("WS connection established. Trying to attach it to the terminal");
+    term.reset();
     attachAddon = new AttachAddon(socket);
     terminal.loadAddon(attachAddon);
     initAddons(term);
