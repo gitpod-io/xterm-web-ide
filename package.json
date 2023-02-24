@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npm rebuild && rimraf dist && rollup -c rollup.config.js",
-    "watch": "rollup -c rollup.config.js -w",
-    "start:server": "node server.cjs",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "start": "yarn package && node dist/index.cjs",
     "package:client": "rimraf out/ && yarn build && mkdir -p out/ && cp -r index.html dist/ assets/ out/",
-    "package:server": "ncc build -m server.cjs -o out-server/"
+    "package:server": "ncc build -m server.cjs -o dist/",
+    "package": "yarn build && yarn package:server"
   },
   "repository": {
     "type": "git",
@@ -23,6 +25,9 @@
   },
   "homepage": "https://github.com/filiptronicek/xterm-web-ide#readme",
   "dependencies": {
+    "@gitpod/gitpod-protocol": "^0.1.5-main.6648",
+    "buffer": "^6.0.3",
+    "fetch-retry": "^5.0.3",
     "node": "16",
     "reconnecting-websocket": "^4.4.0",
     "xterm": "^5.1.0",
@@ -43,8 +48,10 @@
     "node-pty": "^0.10.1",
     "rimraf": "^4.1.2",
     "rollup": "^3.15.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
     "rollup-plugin-polyfill-node": "^0.12.0",
     "typescript": "^4.9.5",
+    "vite": "^4.1.4",
     "xterm-addon-ligatures": "^0.6.0",
     "xterm-addon-unicode11": "^0.5.0"
   }

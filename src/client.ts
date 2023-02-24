@@ -1,16 +1,33 @@
-import ReconnectingWebSocket from "reconnecting-websocket";
-import { Terminal, ITerminalOptions } from "xterm";
+import type ReconnectingWebSocket from "reconnecting-websocket";
+import fetchBuilder from "fetch-retry";
+import type { Terminal, ITerminalOptions, ITerminalAddon } from "xterm";
 
 import { AttachAddon } from "xterm-addon-attach";
 import { FitAddon } from "xterm-addon-fit";
-import { WebLinksAddon } from "xterm-addon-web-links";
-import { WebglAddon } from "xterm-addon-webgl";
-import { Unicode11Addon } from "xterm-addon-unicode11";
-// todo: this does not work and results in ESM issues import { LigaturesAddon } from "xterm-addon-ligatures";
+import type { WebglAddon } from "xterm-addon-webgl";
 
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IWindowWithTerminal } from "./lib/types";
 import { webLinksHandler } from "./lib/addons";
+import { runFakeTerminal } from "./lib/fakeTerminal";
+
+const maxReconnectionRetries = 50;
+
+const fetchOptions = {
+    retries: maxReconnectionRetries,
+    retryDelay: (attempt: number, _error: Error, _response: Response) => {
+        return Math.pow(1.25, attempt) * 200;
+    },
+    retryOn: (attempt: number, error: Error, response: Response) => {
+        if (error !== null || response.status >= 400) {
+            console.log(`retrying, attempt number ${attempt + 1}, ${(Math.pow(1.25, attempt) * 300) / 1000}`);
+            return true;
+        } else {
+            console.warn("Not retrying")
+            return false;
+        }
+    }
+}
 
 declare let window: IWindowWithTerminal;
 
@@ -32,29 +49,79 @@ const webSocketSettings: ReconnectingWebSocket['_options'] = {
     connectionTimeout: 5000,
     maxReconnectionDelay: 7000,
     minReconnectionDelay: 500,
-    maxRetries: 70,
+    maxRetries: maxReconnectionRetries,
     debug: true,
 }
 
-const fitAddon = new FitAddon();
-const webglAddon = new WebglAddon();
-const webLinksAddon = new WebLinksAddon(webLinksHandler);
-const unicodeAddon = new Unicode11Addon();
+const extraTerminalAddons: { [key: string]: ITerminalAddon } = {};
+
+(async () => {
+    extraTerminalAddons['ligatures'] = new (await import("xterm-addon-ligatures")).LigaturesAddon();
+    extraTerminalAddons['fit'] = new (await import("xterm-addon-fit")).FitAddon();
+    extraTerminalAddons['unicode'] = new (await import("xterm-addon-unicode11")).Unicode11Addon();
+    extraTerminalAddons['webLinks'] = new (await import("xterm-addon-web-links")).WebLinksAddon(webLinksHandler);
+    extraTerminalAddons['webgl'] = new (await import("xterm-addon-webgl")).WebglAddon;
+})()
 
 function initAddons(term: Terminal): void {
-    term.loadAddon(fitAddon);
-    term.loadAddon(webglAddon);
-    term.loadAddon(webLinksAddon);
-    term.loadAddon(unicodeAddon);
+
+    for (const addon of Object.values(extraTerminalAddons)) {
+        term.loadAddon(addon);
+    }
 
     term.unicode.activeVersion = '11';
 
-    webglAddon.onContextLoss(() => {
-        webglAddon.dispose();
+    (extraTerminalAddons['webgl'] as WebglAddon).onContextLoss(() => {
+        extraTerminalAddons['webgl'].dispose();
     });
 }
 
-function createTerminal(element: HTMLElement): void {
+async function initiateRemoteTerminal() {
+    updateTerminalSize();
+
+    const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
+
+    const fetcher = fetchBuilder(fetch, fetchOptions);
+    const initialTerminalResizeRequest = await fetcher(`/terminals?cols=${term.cols}&rows=${term.rows}`, {
+        method: "POST",
+        credentials: "include",
+    });
+
+    if (!initialTerminalResizeRequest.ok) {
+        output("Could not setup IDE. Retry?", {
+            formActions: [reloadButton],
+        });
+        return;
+    }
+
+    const serverProcessId = await initialTerminalResizeRequest.text();
+    console.debug(`Got PID from server: ${serverProcessId}`);
+
+    pid = parseInt(serverProcessId);
+    socketURL += serverProcessId;
+    socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
+    socket.onopen = async () => {
+        outputDialog.close();
+
+        try {
+            // Fix for weird supervisor-frontend behavior
+            (document.querySelector(".gitpod-frame") as HTMLDivElement).style.visibility = 'hidden';
+            (document.querySelector("body") as HTMLBodyElement).style.visibility = "visible";
+        } catch { } finally {
+            (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
+        }
+
+        await runRealTerminal(term, socket as WebSocket);
+    };
+    //@ts-ignore
+    socket.onclose = handleDisconnected;
+    //@ts-ignore
+    socket.onerror = handleDisconnected;
+
+    window.socket = socket;
+}
+
+async function createTerminal(element: HTMLElement): Promise<void> {
     // Clean terminal
     while (element.children.length) {
         element.removeChild(element.children[0]);
@@ -62,6 +129,9 @@ function createTerminal(element: HTMLElement): void {
 
     const isWindows =
         ["Windows", "Win16", "Win32", "WinCE"].indexOf(navigator.platform) >= 0;
+
+    const { Terminal } = (await import("xterm"));
+
     term = new Terminal({
         windowsMode: isWindows,
         fontFamily: defaultFonts.join(", "),
@@ -81,37 +151,10 @@ function createTerminal(element: HTMLElement): void {
     term.focus();
 
     // fit is called within a setTimeout, cols and rows need this.
-    setTimeout(() => {
-        updateTerminalSize();
-
-        fetch(`/terminals?cols=${term.cols}&rows=${term.rows}`, {
-            method: "POST",
-        }).then((res) => {
-            res.text().then((processId) => {
-                pid = parseInt(processId);
-                socketURL += processId;
-                socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
-                socket.onopen = () => {
-                    outputDialog.close();
-
-                    try {
-                        // Fix for weird supervisor-frontend behavior
-                        (document.querySelector(".gitpod-frame") as HTMLDivElement).style.visibility = 'hidden';
-                        (document.querySelector("body") as HTMLBodyElement).style.visibility = "visible";
-                    } catch { } finally {
-                        (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus()
-                    }
-
-                    runRealTerminal(term, socket as WebSocket);
-                };
-                //@ts-ignore
-                socket.onclose = handleDisconnected;
-                //@ts-ignore
-                socket.onerror = handleDisconnected;
-
-                window.socket = socket;
-            });
-        });
+    setTimeout(async () => {
+        const interval = runFakeTerminal(term);
+        await initiateRemoteTerminal();
+        clearInterval(interval);
     }, 0);
 }
 
@@ -176,15 +219,15 @@ function output(
 
 let attachAddon: AttachAddon;
 
-function runRealTerminal(terminal: Terminal, socket: WebSocket): void {
+async function runRealTerminal(terminal: Terminal, socket: WebSocket): Promise<void> {
     console.info("WS connection established. Trying to attach it to the terminal");
+    term.reset();
     attachAddon = new AttachAddon(socket);
     terminal.loadAddon(attachAddon);
     initAddons(term);
 }
 
 function updateTerminalSize(): void {
-    //@ts-ignore
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
     fitAddon.fit();
