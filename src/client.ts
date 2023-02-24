@@ -19,7 +19,12 @@ const fetchOptions = {
         return Math.pow(1.25, attempt) * 200;
     },
     retryOn: (attempt: number, error: Error, response: Response) => {
-        if (error !== null || response.status >= 400) {
+        let responseSize = 0;
+        if (!error && response.ok) {
+            responseSize = parseInt(response.headers.get("content-length") || '0');
+        }
+
+        if (error !== null || response.status >= 400 || responseSize > 10) {
             console.log(`retrying, attempt number ${attempt + 1}, ${(Math.pow(1.25, attempt) * 300) / 1000}`);
             return true;
         } else {
