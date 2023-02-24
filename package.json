@@ -27,6 +27,7 @@
   "dependencies": {
     "@gitpod/gitpod-protocol": "^0.1.5-main.6648",
     "buffer": "^6.0.3",
+    "fetch-retry": "^5.0.3",
     "node": "16",
     "reconnecting-websocket": "^4.4.0",
     "xterm": "^5.1.0",

@@ -10,6 +10,9 @@ import { IWindowWithTerminal } from "./lib/types";
 import { webLinksHandler } from "./lib/addons";
 import { initiateSupervisorClient } from "./lib/supervisor-client";
 
+import fetchBuilder from 'fetch-retry'
+const fetch = fetchBuilder(window.fetch)
+
 declare let window: IWindowWithTerminal;
 
 let term: Terminal;
@@ -32,7 +35,7 @@ const webSocketSettings: ReconnectingWebSocket['_options'] = {
     minReconnectionDelay: 500,
     maxRetries: 70,
     debug: true,
-    startClosed: true,
+    // startClosed: true,
 }
 
 const extraTerminalAddons: { [key: string]: ITerminalAddon } = {};
@@ -97,6 +100,9 @@ async function createTerminal(element: HTMLElement): Promise<void> {
 
         const initialTerminalResizeRequest = await fetch(`/terminals?cols=${term.cols}&rows=${term.rows}`, {
             method: "POST",
+            credentials: "include",
+            retries: Infinity,
+            retryDelay: (attempt) => Math.pow(2, attempt) * 200
         });
 
         if (!initialTerminalResizeRequest.ok) {
