@@ -3,7 +3,11 @@ const expressWs = require('express-ws');
 const pty = require('node-pty');
 const events = require('events');
 
-const argv = require('minimist')(process.argv.slice(2), {boolean: ["openExternal"]});
+const WebSocket = require('ws');
+const argv = require('minimist')(process.argv.slice(2), { boolean: ["openExternal"] });
+
+const port = process.env.PORT || 23000,
+  host = '0.0.0.0';
 
 function startServer() {
   const app = express();
@@ -13,7 +17,8 @@ function startServer() {
   const logs = {};
 
   const initTerminal = (term) => {
-    term.write(`export GP_EXTERNAL_BROWSER="/ide/index.cjs --openExternal ${term.pid}"\r`);
+    term.write(`export GP_EXTERNAL_BROWSER="/ide/index.cjs --openExternal --port ${port} ${term.pid}"\r`);
+    //term.write(`export GP_EXTERNAL_BROWSER="node /workspace/xterm-web-ide/dist/index.cjs --openExternal ${term.pid} --port ${port}"\r`);
     term.write('clear\r');
   }
 
@@ -82,7 +87,12 @@ function startServer() {
   app.ws('/terminals/remote-communication-channel/:pid', (ws, req) => {
 
     const pid = parseInt(req.params.pid);
-    console.log(`Client connected to terminal ${pid}`);
+
+    if (!terminals[pid]) {
+      console.error("Should not connect to missing terminal");
+    }
+
+    console.log(`Client joined remote communication channel of ${pid}`);
 
     ws.on('message', (msg) => {
       try {
@@ -150,26 +160,22 @@ function startServer() {
     });
   });
 
-  const port = process.env.PORT || 23000,
-    host = '0.0.0.0';
-
   console.log(`App listening to http://127.0.0.1:${port}`);
   app.listen(port, host);
 }
 
 if (argv.openExternal) {
-  const WebSocket = require('ws');
-
   const pid = argv._[0];
   const url = argv._[1];
+  const { port } = argv;
 
   if (!pid) {
     console.error("Please provide a PID");
     process.exit(1);
   }
 
-  const ws = new WebSocket(`ws://localhost:23000/terminals/remote-communication-channel/${pid}`);
-
+  const ws = new WebSocket(`ws://localhost:${port}/terminals/remote-communication-channel/${pid}`);
+  console.log(`ws://localhost:${port}/terminals/remote-communication-channel/${pid}`)
   ws.on('open', () => {
     ws.send(JSON.stringify({ action: "openUrl", data: url || "https://gitpod.io" }));
     console.info("Sent openUrl message");
