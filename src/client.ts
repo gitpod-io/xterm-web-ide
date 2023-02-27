@@ -10,7 +10,7 @@ import { resizeRemoteTerminal } from "./lib/remote";
 import { IWindowWithTerminal } from "./lib/types";
 import { webLinksHandler } from "./lib/addons";
 import { runFakeTerminal } from "./lib/fakeTerminal";
-import { initiateExternalMessagingChannelSocket } from "./lib/remote";
+import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
 
 const maxReconnectionRetries = 50;
 
@@ -101,7 +101,7 @@ async function initiateRemoteTerminal() {
     pid = parseInt(serverProcessId);
     socketURL += serverProcessId;
 
-    await initiateExternalMessagingChannelSocket(protocol, pid);
+    await initiateRemoteCommunicationChannelSocket(protocol, pid);
     socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
     socket.onopen = async () => {
         outputDialog.close();
