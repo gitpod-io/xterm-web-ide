@@ -1,13 +1,19 @@
 const express = require('express');
 const expressWs = require('express-ws');
 const pty = require('node-pty');
+const events = require('events');
 
 function startServer() {
   const app = express();
   expressWs(app);
 
-  const terminals = {},
-    logs = {};
+  const terminals = {};
+  const logs = {};
+
+  const initTerminal = (term) => {
+    term.write(`export GP_EXTERNAL_BROWSER="/ide/openExternal.cjs ${term.pid}"\r`);
+    term.write('clear\r');
+  }
 
   app.get('/', (_req, res) => { // lgtm [js/missing-rate-limiting]
     res.sendFile(__dirname + '/index.html');
@@ -18,18 +24,10 @@ function startServer() {
   app.use('/src', express.static(__dirname + '/src'));
 
   app.post('/terminals', (req, res) => {
-    const env = Object.assign({}, process.env);
+    const env = Object.assign(process.env, {});
     env['COLORTERM'] = 'truecolor';
-    const cols = parseInt(req.query.cols),
-      rows = parseInt(req.query.rows),
-      term = pty.spawn('bash', [], {
-        name: 'xterm-256color',
-        cols: cols || 80,
-        rows: rows || 24,
-        cwd: env.GITPOD_REPO_ROOT || env.PWD,
-        env: env,
-        encoding: null
-      });
+    const cols = parseInt(req.query.cols);
+    const rows = parseInt(req.query.rows);
 
     if (Object.keys(terminals).length > 0) {
       const term = Object.values(terminals)[0];
@@ -38,6 +36,16 @@ function startServer() {
       res.end();
       return;
     }
+
+    const term = pty.spawn('bash', [], {
+      name: 'xterm-256color',
+      cols: cols || 80,
+      rows: rows || 24,
+      cwd: env.GITPOD_REPO_ROOT || env.PWD,
+      env,
+      encoding: null
+    });
+    initTerminal(term);
 
     console.log(`Created terminal with PID: ${term.pid}`);
     terminals[term.pid] = term;
@@ -66,6 +74,30 @@ function startServer() {
     term.resize(cols, rows);
     console.log(`Resized terminal ${pid} to ${cols} cols and ${rows} rows.`);
     res.end();
+  });
+
+  const em = new events.EventEmitter();
+  app.ws('/terminals/remote-communication-channel/:pid', (ws, req) => {
+
+    const pid = parseInt(req.params.pid);
+    console.log(`Client connected to terminal ${pid}`);
+
+    ws.on('message', (msg) => {
+      try {
+        msg = JSON.parse(msg);
+      } catch (e) {
+        console.error('Invalid JSON');
+        return;
+      }
+
+      em.emit('message', msg);
+      console.log(`Client sent message to terminal ${pid}: ${msg}`);
+    });
+
+    em.on('message', (msg) => {
+      ws.send(JSON.stringify(msg));
+    });
+
   });
 
   app.ws('/terminals/:pid', (ws, req) => {
