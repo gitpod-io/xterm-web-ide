@@ -3,6 +3,8 @@ const expressWs = require('express-ws');
 const pty = require('node-pty');
 const events = require('events');
 
+const argv = require('minimist')(process.argv.slice(2), {boolean: ["openExternal"]});
+
 function startServer() {
   const app = express();
   expressWs(app);
@@ -11,7 +13,7 @@ function startServer() {
   const logs = {};
 
   const initTerminal = (term) => {
-    term.write(`export GP_EXTERNAL_BROWSER="/ide/openExternal.cjs ${term.pid}"\r`);
+    term.write(`export GP_EXTERNAL_BROWSER="/ide/index.cjs --openExternal ${term.pid}"\r`);
     term.write('clear\r');
   }
 
@@ -91,7 +93,7 @@ function startServer() {
       }
 
       em.emit('message', msg);
-      console.log(`Client sent message to terminal ${pid}: ${msg}`);
+      console.log(`Client sent message to terminal ${pid}: ${JSON.stringify(msg)}`);
     });
 
     em.on('message', (msg) => {
@@ -155,8 +157,29 @@ function startServer() {
   app.listen(port, host);
 }
 
-if (require.main === module) {
-  startServer()
+if (argv.openExternal) {
+  const WebSocket = require('ws');
+
+  const pid = argv._[0];
+  const url = argv._[1];
+
+  if (!pid) {
+    console.error("Please provide a PID");
+    process.exit(1);
+  }
+
+  const ws = new WebSocket(`ws://localhost:23000/terminals/remote-communication-channel/${pid}`);
+
+  ws.on('open', () => {
+    ws.send(JSON.stringify({ action: "openUrl", data: url || "https://gitpod.io" }));
+    console.info("Sent openUrl message");
+    ws.close();
+    process.exit(0);
+  });
+} else {
+  if (require.main === module) {
+    startServer()
+  }
 }
 
 module.exports = startServer;
