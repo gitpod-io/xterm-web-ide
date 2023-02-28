@@ -17,7 +17,7 @@ function startServer() {
   const logs = {};
 
   const initTerminal = (term) => {
-    term.write(`export GP_EXTERNAL_BROWSER="/ide/index.cjs --openExternal --port ${port} ${term.pid}"\r`);
+    term.write(`export GP_EXTERNAL_BROWSER="node '/ide/index.cjs --openExternal --port ${port} ${term.pid}'"\r`);
     //term.write(`export GP_EXTERNAL_BROWSER="node /workspace/xterm-web-ide/dist/index.cjs --openExternal ${term.pid} --port ${port}"\r`);
     term.write('clear\r');
   }
