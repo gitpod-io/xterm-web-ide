@@ -42,8 +42,9 @@ const defaultFonts = ["JetBrains Mono", "Fira Code", "courier-new", "courier", "
 
 const terminalContainer = document.getElementById("terminal-container");
 
-if (terminalContainer) {
+if (terminalContainer && !terminalContainer.classList.contains("init")) {
     createTerminal(terminalContainer);
+    terminalContainer.classList.add("init");
 }
 
 export const webSocketSettings: ReconnectingWebSocket['_options'] = {
