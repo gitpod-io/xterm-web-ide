@@ -1,7 +1,10 @@
+//@ts-check
+
 const express = require('express');
 const expressWs = require('express-ws');
 const pty = require('node-pty');
 const events = require('events');
+const crypto = require('crypto');
 
 const WebSocket = require('ws');
 const argv = require('minimist')(process.argv.slice(2), { boolean: ["openExternal"] });
@@ -18,7 +21,7 @@ function startServer() {
 
   const initTerminal = (term) => {
     term.write(`export GP_EXTERNAL_BROWSER="/ide/startup.sh --openExternal --port ${port} ${term.pid}"\r`);
-    //term.write(`export GP_EXTERNAL_BROWSER="node /workspace/xterm-web-ide/dist/index.cjs --openExternal ${term.pid} --port ${port}"\r`);
+    //term.write(`export GP_EXTERNAL_BROWSER="/workspace/xterm-web-ide/startup.sh --openExternal ${term.pid} --port ${port}"\r`);
     term.write('clear\r');
   }
 
@@ -174,10 +177,16 @@ if (argv.openExternal) {
     process.exit(1);
   }
 
+  if (!url) {
+    console.error("Please provide a URL");
+    process.exit(1);
+  }
+
   const ws = new WebSocket(`ws://localhost:${port}/terminals/remote-communication-channel/${pid}`);
-  console.log(`ws://localhost:${port}/terminals/remote-communication-channel/${pid}`)
+  console.info(`ws://localhost:${port}/terminals/remote-communication-channel/${pid}`)
   ws.on('open', () => {
-    ws.send(JSON.stringify({ action: "openUrl", data: url || "https://gitpod.io" }));
+    const id = crypto.randomUUID();
+    ws.send(JSON.stringify({ action: "openUrl", data: url, id }));
     console.info("Sent openUrl message");
     ws.close();
     process.exit(0);

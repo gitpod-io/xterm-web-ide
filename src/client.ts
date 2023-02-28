@@ -7,7 +7,7 @@ import { FitAddon } from "xterm-addon-fit";
 import type { WebglAddon } from "xterm-addon-webgl";
 
 import { resizeRemoteTerminal } from "./lib/remote";
-import { IWindowWithTerminal } from "./lib/types";
+import { IXtermWindow } from "./lib/types";
 import { webLinksHandler } from "./lib/addons";
 import { runFakeTerminal } from "./lib/fakeTerminal";
 import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
@@ -30,13 +30,14 @@ const fetchOptions = {
     }
 }
 
-declare let window: IWindowWithTerminal;
+declare let window: IXtermWindow;
 
 let term: Terminal;
 let protocol: string;
 let socketURL: string;
 let socket: ReconnectingWebSocket;
 let pid: number;
+window.handledMessages = [];
 
 const defaultFonts = ["JetBrains Mono", "Fira Code", "courier-new", "courier", "monospace"];
 

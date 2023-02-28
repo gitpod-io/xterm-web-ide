@@ -9,9 +9,10 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 
 export type AddonType = "attach" | "fit" | "unicode11" | "web-links" | "webgl" | "ligatures";
 
-export interface IWindowWithTerminal extends Window {
+export interface IXtermWindow extends Window {
   term: Terminal;
   socket: ReconnectingWebSocket;
+  handledMessages: string[];
 }
 
 export interface Addon<T extends AddonType> {

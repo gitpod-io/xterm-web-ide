@@ -1,4 +1,7 @@
 import { webSocketSettings } from "../client";
+import { IXtermWindow } from "./types";
+
+declare let window: IXtermWindow;
 
 export const resizeRemoteTerminal = (size: { cols: number; rows: number }, pid: number) => {
     if (!pid) {
@@ -20,11 +23,24 @@ export const initiateRemoteCommunicationChannelSocket = async (protocol: string,
     };
 
     socket.onmessage = (event) => {
+        if (!event.data) {
+            console.warn("Received empty message");
+            return;
+        }
+
         const messageData = JSON.parse(event.data);
+        if (window.handledMessages.includes(messageData.id)) {
+            console.debug(`Message already handled: ${messageData.id}`);
+            return;
+        }
+
         if (messageData.action === "openUrl") {
             const url = messageData.data;
             console.debug(`Opening URL: ${url}`);
             window.open(url, "_blank");
         }
+
+        window.handledMessages.push(messageData.id);
+        console.debug(`Handled message: ${messageData.id}`);
     };
 };
