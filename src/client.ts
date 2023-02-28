@@ -35,7 +35,6 @@ declare let window: IXtermWindow;
 let term: Terminal;
 let protocol: string;
 let socketURL: string;
-let socket: ReconnectingWebSocket;
 let pid: number;
 window.handledMessages = [];
 
@@ -103,8 +102,8 @@ async function initiateRemoteTerminal() {
     socketURL += serverProcessId;
 
     await initiateRemoteCommunicationChannelSocket(protocol, pid);
-    socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
-    socket.onopen = async () => {
+    window.socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
+    window.socket.onopen = async () => {
         outputDialog.close();
 
         try {
@@ -115,14 +114,12 @@ async function initiateRemoteTerminal() {
             (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
         }
 
-        await runRealTerminal(term, socket as WebSocket);
+        await runRealTerminal(term, window.socket as WebSocket);
     };
     //@ts-ignore
-    socket.onclose = handleDisconnected;
+    window.socket.onclose = handleDisconnected;
     //@ts-ignore
-    socket.onerror = handleDisconnected;
-
-    window.socket = socket;
+    window.socket.onerror = handleDisconnected;
 }
 
 async function createTerminal(element: HTMLElement): Promise<void> {
@@ -168,11 +165,11 @@ reloadButton.onclick = () => location.reload();
 
 const reconnectButton = document.createElement("button");
 reconnectButton.innerText = "Reconnect";
-reconnectButton.onclick = () => socket.reconnect();
+reconnectButton.onclick = () => window.socket.reconnect();
 
 function handleDisconnected(e: CloseEvent) {
 
-    if (socket.retryCount < webSocketSettings.maxRetries) {
+    if (window.socket.retryCount < webSocketSettings.maxRetries) {
         console.info("Tried to reconnect WS")
         return;
     }
