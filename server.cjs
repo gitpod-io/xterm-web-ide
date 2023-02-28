@@ -182,8 +182,9 @@ if (argv.openExternal) {
     process.exit(1);
   }
 
-  const ws = new WebSocket(`ws://localhost:${port}/terminals/remote-communication-channel/${pid}`);
-  console.info(`ws://localhost:${port}/terminals/remote-communication-channel/${pid}`)
+  const webSocketUrl = `ws://localhost:${port}/terminals/remote-communication-channel/${pid}`;
+  const ws = new WebSocket(webSocketUrl);
+  console.info(webSocketUrl)
   ws.on('open', () => {
     const id = crypto.randomUUID();
     ws.send(JSON.stringify({ action: "openUrl", data: url, id }));
