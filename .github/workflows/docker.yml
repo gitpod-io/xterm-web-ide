@@ -23,8 +23,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          build-args: |
-            XTERM_COMMIT=${{ env.GITHUB_SHA }}
       
       - name: Build and push
         uses: docker/build-push-action@v4
@@ -32,3 +30,5 @@ jobs:
           push: true
           context: .
           tags: filiptronicek/xterm-ide # todo: change this
+          build-args: |
+            XTERM_COMMIT=${{ env.GITHUB_SHA }}
