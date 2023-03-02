@@ -4,7 +4,7 @@
 
 FROM node:16 as ide_installer
 RUN apt update && apt install python3
-COPY . /ide-prepare/
+ADD . /ide-prepare/
 WORKDIR /ide-prepare/
 RUN yarn --frozen-lockfile --network-timeout 180000 && \
     yarn build
