@@ -9,8 +9,8 @@ const crypto = require('crypto');
 const WebSocket = require('ws');
 const argv = require('minimist')(process.argv.slice(2), { boolean: ["openExternal"] });
 
-const port = process.env.PORT || 23000,
-  host = '0.0.0.0';
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 23000;
+const host = '0.0.0.0';
 
 function startServer() {
   const app = express();
@@ -34,10 +34,27 @@ function startServer() {
   app.use('/src', express.static(__dirname + '/src'));
 
   app.post('/terminals', (req, res) => {
-    const env = Object.assign(process.env, {});
-    env['COLORTERM'] = 'truecolor';
-    const cols = parseInt(req.query.cols);
-    const rows = parseInt(req.query.rows);
+    if (!req.query.cols || req.query.rows) {
+      res.statusCode = 400;
+      res.send('`cols` and `rows` are required');
+      res.end();
+      return;
+    } else if (typeof req.query.cols !== 'string' || typeof req.query.rows !== 'string') {
+      res.statusCode = 400;
+      res.send('`cols` and `rows` must be strings');
+      res.end();
+      return;
+    }
+
+    const cols = parseInt(req.query.cols, 10);
+    const rows = parseInt(req.query.rows, 10);
+
+    if (isNaN(cols) || isNaN(rows)) {
+      res.statusCode = 400;
+      res.send('`cols` and `rows` must be parsable as integers');
+      res.end();
+      return;
+    }
 
     if (Object.keys(terminals).length > 0) {
       const term = Object.values(terminals)[0];
@@ -46,6 +63,9 @@ function startServer() {
       res.end();
       return;
     }
+
+    const env = Object.assign(process.env, {});
+    env['COLORTERM'] = 'truecolor';
 
     const term = pty.spawn('bash', [], {
       name: 'xterm-256color',
@@ -95,7 +115,7 @@ function startServer() {
       console.error("Should not connect to missing terminal");
     }
 
-    console.log(`Client joined remote communication channel of ${pid}`);
+    console.info(`Client joined remote communication channel of ${pid}`);
 
     ws.on('message', (msg) => {
       try {
@@ -106,13 +126,12 @@ function startServer() {
       }
 
       em.emit('message', msg);
-      console.log(`Client sent message to terminal ${pid}: ${JSON.stringify(msg)}`);
+      console.info(`Client sent message to terminal ${pid}: ${JSON.stringify(msg)}`);
     });
 
     em.on('message', (msg) => {
       ws.send(JSON.stringify(msg));
     });
-
   });
 
   app.ws('/terminals/:pid', (ws, req) => {
@@ -164,7 +183,7 @@ function startServer() {
   });
 
   console.log(`App listening to http://127.0.0.1:${port}`);
-  app.listen(port, host);
+  app.listen(port, host, 511);
 }
 
 if (argv.openExternal) {
