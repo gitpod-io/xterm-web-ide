@@ -20,3 +20,12 @@ COPY --chown=33333:33333 --from=ide_installer /ide/ /ide/
 COPY --chown=33333:33333 --from=ide_installer /ide-prepare/out-server/ /ide/
 COPY --chown=33333:33333 --from=ide_installer /ide-prepare/node_modules/node/bin/node /ide/bin/
 COPY --chown=33333:33333 startup.sh supervisor-ide-config.json /ide/
+
+ENV GITPOD_ENV_SET_EDITOR=/ide/bin/remote-cli/gitpod-code
+ENV GITPOD_ENV_SET_VISUAL="$GITPOD_ENV_SET_EDITOR"
+ENV GITPOD_ENV_SET_GP_OPEN_EDITOR="$GITPOD_ENV_SET_EDITOR"
+ENV GITPOD_ENV_SET_GIT_EDITOR="$GITPOD_ENV_SET_EDITOR"
+
+ARG XTERM_COMMIT
+LABEL "io.gitpod.ide.commit"=$XTERM_COMMIT
+

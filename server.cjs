@@ -74,7 +74,9 @@ function startServer() {
       return;
     }
 
-    const env = Object.assign(process.env, {});
+    const env = Object.assign({"EDITOR": "/usr/bin/nano"}, process.env);
+
+    env['EDITOR'] = "/usr/bin/nano";
     env['COLORTERM'] = 'truecolor';
 
     const term = pty.spawn('bash', [], {
