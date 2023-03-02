@@ -35,8 +35,12 @@ function startServer() {
     term.write('clear\r');
   }
 
-  app.get('/', (_req, res) => { // lgtm [js/missing-rate-limiting]
+  app.get('/', (_req, res) => {
     res.sendFile(__dirname + '/index.html');
+  });
+
+  app.get('/version', (_req, res) => {
+    res.sendFile(__dirname + '/commit.txt');
   });
 
   app.use('/dist', express.static(__dirname + '/dist'));
