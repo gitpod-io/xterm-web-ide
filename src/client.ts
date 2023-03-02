@@ -1,5 +1,6 @@
 import type ReconnectingWebSocket from "reconnecting-websocket";
 import fetchBuilder from "fetch-retry";
+import party from "party-js";
 import type { Terminal, ITerminalOptions, ITerminalAddon } from "xterm";
 
 import { AttachAddon } from "xterm-addon-attach";
@@ -13,6 +14,13 @@ import { runFakeTerminal } from "./lib/fakeTerminal";
 import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
 
 const maxReconnectionRetries = 50;
+
+const celebrate = () => {
+    const area = document.querySelector("textarea.xterm-helper-textarea");
+    console.log("Confetting")
+    //@ts-ignore
+    area && party.confetti(area);
+}
 
 const fetchOptions = {
     retries: maxReconnectionRetries,
@@ -143,6 +151,12 @@ async function createTerminal(element: HTMLElement): Promise<void> {
     window.term = term; // Expose `term` to window for debugging purposes
     term.onResize((size) => {
         resizeRemoteTerminal(size, pid);
+    });
+
+    term.onKey((e) => {
+        if (e.domEvent.key === "Enter") {
+            celebrate();
+        }
     });
     protocol = location.protocol === "https:" ? "wss://" : "ws://";
     socketURL = `${protocol + location.hostname + (location.port ? ":" + location.port : "")
