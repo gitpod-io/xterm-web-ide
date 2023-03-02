@@ -31,4 +31,4 @@ jobs:
           context: .
           tags: filiptronicek/xterm-ide # todo: change this
           build-args: |
-            XTERM_COMMIT=${{ env.GITHUB_SHA }}
+            XTERM_COMMIT=${{ github.sha }}
