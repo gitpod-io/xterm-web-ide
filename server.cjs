@@ -6,11 +6,21 @@ const pty = require('node-pty');
 const events = require('events');
 const crypto = require('crypto');
 
+const rateLimit = require('express-rate-limit').default;
+
 const WebSocket = require('ws');
 const argv = require('minimist')(process.argv.slice(2), { boolean: ["openExternal"] });
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 23000;
 const host = '0.0.0.0';
+
+const rateLimiter = rateLimit({
+	windowMs: 60 * 1000,
+	max: 50,
+  message: "Too many requests from this IP, please try again after 1 minute",
+	standardHeaders: true,
+	legacyHeaders: false,
+});
 
 function startServer() {
   const app = express();
@@ -33,8 +43,8 @@ function startServer() {
   app.use('/assets', express.static(__dirname + '/assets'));
   app.use('/src', express.static(__dirname + '/src'));
 
-  app.post('/terminals', (req, res) => {
-    if (!req.query.cols || req.query.rows) {
+  app.post('/terminals', rateLimiter, (req, res) => {
+    if (!req.query.cols || !req.query.rows) {
       res.statusCode = 400;
       res.send('`cols` and `rows` are required');
       res.end();
@@ -95,7 +105,7 @@ function startServer() {
     res.end();
   });
 
-  app.post('/terminals/:pid/size', (req, res) => {
+  app.post('/terminals/:pid/size', rateLimiter, (req, res) => {
     const pid = parseInt(req.params.pid),
       cols = parseInt(req.query.cols),
       rows = parseInt(req.query.rows),
