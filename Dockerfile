@@ -3,6 +3,9 @@
 # See License-AGPL.txt in the project root for license information.
 
 FROM node:16 as ide_installer
+
+ARG XTERM_COMMIT
+
 RUN apt update && apt install python3
 ADD . /ide-prepare/
 WORKDIR /ide-prepare/
@@ -11,6 +14,7 @@ RUN yarn --frozen-lockfile --network-timeout 180000 && \
 RUN cp -r dist/ /ide/
 RUN rm -rf dist/
 RUN yarn package:server
+RUN echo ${XTERM_COMMIT} > dist/commit.txt
 RUN cp -r dist/ out-server/
 RUN chmod -R ugo+x /ide
 

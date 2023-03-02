@@ -9,8 +9,9 @@
     "preview": "vite preview",
     "start": "yarn package && node dist/index.cjs",
     "package:client": "rimraf out/ && yarn build && mkdir -p out/ && cp -r index.html dist/ assets/ out/",
-    "package:server": "ncc build -m server.cjs -o dist/ && git rev-parse HEAD > dist/commit.txt",
-    "package": "yarn build && yarn package:server"
+    "package:server": "ncc build -m server.cjs -o dist/",
+    "inject-commit": "git rev-parse HEAD > dist/commit.txt",
+    "package": "yarn build && yarn package:server && yarn inject-commit"
   },
   "repository": {
     "type": "git",
