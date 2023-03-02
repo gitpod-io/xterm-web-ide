@@ -106,10 +106,31 @@ function startServer() {
   });
 
   app.post('/terminals/:pid/size', rateLimiter, (req, res) => {
-    const pid = parseInt(req.params.pid),
-      cols = parseInt(req.query.cols),
-      rows = parseInt(req.query.rows),
-      term = terminals[pid];
+
+    if (!req.query.cols || !req.query.rows) {
+      res.statusCode = 400;
+      res.send('`cols` and `rows` are required');
+      res.end();
+      return;
+    } else if (typeof req.query.cols !== 'string' || typeof req.query.rows !== 'string') {
+      res.statusCode = 400;
+      res.send('`cols` and `rows` must be strings');
+      res.end();
+      return;
+    }
+
+    const cols = parseInt(req.query.cols, 10);
+    const rows = parseInt(req.query.rows, 10);
+    const pid = parseInt(req.params.pid);
+
+    if (isNaN(cols) || isNaN(rows) || isNaN(pid)) {
+      res.statusCode = 400;
+      res.send('`cols`, `rows` & `pid` must be parsable as integers');
+      res.end();
+      return;
+    }
+
+    const term = terminals[pid];
 
     term.resize(cols, rows);
     console.log(`Resized terminal ${pid} to ${cols} cols and ${rows} rows.`);
