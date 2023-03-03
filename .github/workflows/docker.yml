@@ -1,11 +1,6 @@
-name: DockerHub Release
+name: Docker image
 on:
-  workflow_call:
-    secrets:
-      DOCKERHUB_USERNAME:
-        required: true
-      DOCKERHUB_TOKEN:
-        required: true
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -18,17 +13,25 @@ jobs:
       - name: Checkout the repo
         uses: actions/checkout@v3
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
+      - name: Auth Google Cloud SDK
+        uses: google-github-actions/auth@v0
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Set up Docker
+        run: |
+          gcloud auth configure-docker --quiet
+
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
           push: true
           context: .
-          tags: filiptronicek/xterm-ide # todo: change this
+          tags: eu.gcr.io/gitpod-core-dev/build/ide/xterm-web:commit-${{ github.sha }}
           build-args: |
             XTERM_COMMIT=${{ github.sha }}
