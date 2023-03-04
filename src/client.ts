@@ -4,7 +4,6 @@ import type { Terminal, ITerminalOptions, ITerminalAddon } from "xterm";
 
 import { AttachAddon } from "xterm-addon-attach";
 import { FitAddon } from "xterm-addon-fit";
-import type { WebglAddon } from "xterm-addon-webgl";
 
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IXtermWindow } from "./lib/types";
@@ -62,20 +61,27 @@ const extraTerminalAddons: { [key: string]: ITerminalAddon } = {};
     extraTerminalAddons['fit'] = new (await import("xterm-addon-fit")).FitAddon();
     extraTerminalAddons['unicode'] = new (await import("xterm-addon-unicode11")).Unicode11Addon();
     extraTerminalAddons['webLinks'] = new (await import("xterm-addon-web-links")).WebLinksAddon(webLinksHandler);
-    extraTerminalAddons['webgl'] = new (await import("xterm-addon-webgl")).WebglAddon;
 })()
 
-function initAddons(term: Terminal): void {
-
+async function initAddons(term: Terminal): Promise<void> {
     for (const addon of Object.values(extraTerminalAddons)) {
         term.loadAddon(addon);
     }
 
-    term.unicode.activeVersion = '11';
+    const webglRenderer = new (await import("xterm-addon-webgl")).WebglAddon;
+    try {
+        term.loadAddon(webglRenderer);
+        webglRenderer.onContextLoss(() => {
+            webglRenderer.dispose();
+        });
+    } catch (e) {
+        console.warn(`Webgl renderer could not be loaded. Falling back to the canvas renderer type.`, e);
+        webglRenderer.dispose();
+        const canvasRenderer = new (await import("xterm-addon-canvas")).CanvasAddon;
+        term.loadAddon(canvasRenderer);
+    }
 
-    (extraTerminalAddons['webgl'] as WebglAddon).onContextLoss(() => {
-        extraTerminalAddons['webgl'].dispose();
-    });
+    term.unicode.activeVersion = '11';
 }
 
 async function initiateRemoteTerminal() {
@@ -226,7 +232,7 @@ async function runRealTerminal(terminal: Terminal, socket: WebSocket): Promise<v
     term.reset();
     attachAddon = new AttachAddon(socket);
     terminal.loadAddon(attachAddon);
-    initAddons(term);
+    await initAddons(term);
 }
 
 function updateTerminalSize(): void {
