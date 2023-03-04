@@ -36,7 +36,7 @@ jobs:
         with:
           push: true
           context: .
-          tags: eu.gcr.io/gitpod-core-dev/build/ide/xterm-web:commit-${{ github.sha }}
+          tags: eu.gcr.io/gitpod-core-dev/build/ide/xterm-web:commit-${{ github.sha }} eu.gcr.io/gitpod-core-dev/build/ide/xterm-web:latest
           build-args: |
             XTERM_COMMIT=${{ github.sha }}
             XTERM_VERSION=${{ steps.package-version.outputs.version }}
