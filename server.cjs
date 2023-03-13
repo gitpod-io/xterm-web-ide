@@ -15,11 +15,11 @@ const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 23000;
 const host = '0.0.0.0';
 
 const rateLimiter = rateLimit({
-	windowMs: 60 * 1000,
-	max: 50,
+  windowMs: 60 * 1000,
+  max: 50,
   message: "Too many requests from this IP, please try again after 1 minute",
-	standardHeaders: true,
-	legacyHeaders: false,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 function startServer() {
@@ -246,10 +246,8 @@ if (argv.openExternal) {
     ws.close();
     process.exit(0);
   });
-} else {
-  if (require.main === module) {
-    startServer()
-  }
+} else if (require.main === module) {
+  startServer()
 }
 
 module.exports = startServer;
