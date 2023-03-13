@@ -10,6 +10,8 @@
         "EDITOR": "/usr/bin/nano",
         "VISUAL": "$EDITOR",
         "GP_OPEN_EDITOR": "$EDITOR",
-        "GIT_EDITOR": "$EDITOR"
+        "GIT_EDITOR": "$EDITOR",
+        "GP_EXTERNAL_BROWSER": "/ide/startup.sh --openExternal --port 23000 ${term.pid}",
+        "GP_PREVIEW_BROWSER": "$GP_EXTERNAL_BROWSER"
     }
 }
