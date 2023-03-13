@@ -5,5 +5,11 @@
         "http": {
             "path": "/"
         }
+    },
+    "env": {
+        "EDITOR": "/usr/bin/nano",
+        "VISUAL": "$EDITOR",
+        "GP_OPEN_EDITOR": "$EDITOR",
+        "GIT_EDITOR": "$EDITOR"
     }
 }
