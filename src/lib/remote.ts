@@ -14,9 +14,9 @@ export const resizeRemoteTerminal = (size: { cols: number; rows: number }, pid: 
     fetch(url, { method: "POST" });
 }
 
-export const initiateRemoteCommunicationChannelSocket = async (protocol: string, pid: number) => {
+export const initiateRemoteCommunicationChannelSocket = async (protocol: string) => {
     const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
-    const socket = new ReconnectingWebSocket(`${protocol + location.hostname + (location.port ? ":" + location.port : "")}/terminals/remote-communication-channel/${pid}`, [], webSocketSettings);
+    const socket = new ReconnectingWebSocket(`${protocol + location.hostname + (location.port ? ":" + location.port : "")}/terminals/remote-communication-channel/`, [], webSocketSettings);
 
     socket.onopen = () => {
         console.debug("External messaging channel socket opened");
