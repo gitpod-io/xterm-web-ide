@@ -115,8 +115,8 @@ async function initiateRemoteTerminal() {
 
         try {
             // Fix for weird supervisor-frontend behavior
-            (document.querySelector(".gitpod-frame") as HTMLDivElement).style.visibility = 'hidden';
-            (document.querySelector("body") as HTMLBodyElement).style.visibility = "visible";
+            (document.querySelector(".gitpod-frame") as HTMLDivElement).hidden = true;
+            (document.querySelector("body") as HTMLBodyElement).hidden = false;
         } catch { } finally {
             (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
         }
