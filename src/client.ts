@@ -112,14 +112,7 @@ async function initiateRemoteTerminal() {
     window.socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
     window.socket.onopen = async () => {
         outputDialog.close();
-
-        try {
-            // Fix for weird supervisor-frontend behavior
-            (document.querySelector(".gitpod-frame") as HTMLDivElement).style.opacity = "0";
-            (document.querySelector("body") as HTMLBodyElement).style.opacity = "1";
-        } catch { } finally {
-            (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
-        }
+        (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
 
         await runRealTerminal(term, window.socket as WebSocket);
     };
