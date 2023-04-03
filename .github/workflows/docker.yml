@@ -12,10 +12,12 @@ jobs:
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v3
-    
-      - name: Get the version from package.json
+
+      - name: Prepare
         id: package-version
-        run: echo "{version}={$(jq -r .version package.json)}" >> $GITHUB_OUTPUT
+        run: |
+          echo "{version}={$(jq -r .version supervisor-ide-config.json)}" >> $GITHUB_OUTPUT
+          echo "{manfiest}={$(cat supervisor-ide-config.json | jq -c)}" >> $GITHUB_OUTPUT
 
       - name: Auth Google Cloud SDK
         uses: google-github-actions/auth@v0
@@ -41,4 +43,6 @@ jobs:
             eu.gcr.io/gitpod-core-dev/build/ide/xterm-web:latest
           build-args: |
             XTERM_COMMIT=${{ github.sha }}
-            XTERM_VERSION=${{ steps.package-version.outputs.version }}
+            XTERM_VERSION=${{ steps.prepare.outputs.version }}
+            XTERM_MANIFEST=${{ steps.prepare.outputs.manifest }}
+            

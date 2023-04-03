@@ -1,4 +1,4 @@
 #!/bin/bash -li
 
-cd /ide || exit
-exec /ide/bin/node /ide/index.cjs "$@"
+cd /ide/xterm || exit
+exec /ide/xterm/bin/node /ide/xterm/index.cjs "$@"

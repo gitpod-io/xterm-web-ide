@@ -15,4 +15,4 @@ rm /ide/xterm && true
 ln -s /workspace/rebuild/ide/xterm /ide/xterm
 echo "xterm: linked in /ide"
 
-gp rebuild --workspace-folder=/workspace/xterm-web-ide/example/workspace "$@"
+gp validate --workspace-folder=/workspace/xterm-web-ide/example/workspace "$@"
