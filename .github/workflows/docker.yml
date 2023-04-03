@@ -17,7 +17,7 @@ jobs:
         id: package-version
         run: |
           echo "{version}={$(jq -r .version supervisor-ide-config.json)}" >> $GITHUB_OUTPUT
-          echo "{manfiest}={$(cat supervisor-ide-config.json | jq -c)}" >> $GITHUB_OUTPUT
+          echo "{manifest}={$(cat supervisor-ide-config.json | jq -c)}" >> $GITHUB_OUTPUT
 
       - name: Auth Google Cloud SDK
         uses: google-github-actions/auth@v0
