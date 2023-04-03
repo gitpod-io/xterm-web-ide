@@ -1047,10 +1047,10 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.16.17.tgz#c5a1a4bfe1b57f0c3e61b29883525c6da3e5c091"
   integrity sha512-y+EHuSchhL7FjHgvQL/0fnnFmO4T1bhvWANX6gcnqTjtnKWbTvUMCpGnv2+t+31d7RzyEAYAd4u2fnIhHL6N/Q==
 
-"@gitpod/gitpod-protocol@^0.1.5-main.6648":
-  version "0.1.5-main.6648"
-  resolved "https://registry.yarnpkg.com/@gitpod/gitpod-protocol/-/gitpod-protocol-0.1.5-main.6648.tgz#5986fe182ea5160540e87a0b7355d02956bd2bb0"
-  integrity sha512-0LISoQptnthEhu3SMxknbS2xsdWq93O95bBazt9d+s8YParfWl9wuVSrSveHvJHWJMVDpTIjVWRTDF9LinVfng==
+"@gitpod/gitpod-protocol@^0.1.5-main.6983":
+  version "0.1.5-main.6983"
+  resolved "https://registry.yarnpkg.com/@gitpod/gitpod-protocol/-/gitpod-protocol-0.1.5-main.6983.tgz#3150fefa07578339b701338094df5131eae80a9a"
+  integrity sha512-FTlr02Hd0mJkRedjYyVUP1BeHXdFaeaRXygrq3cQ1PJrkpM7g0hzQNf4mdh3JQsF6sGeI1mmxRCFgqZeD6aJLQ==
   dependencies:
     "@types/react" "17.0.32"
     abort-controller-x "^0.4.0"

@@ -1,3 +1,7 @@
+/// <reference types='@gitpod/gitpod-protocol/lib/typings/globals'/>
+
+import type { IDEFrontendState } from '@gitpod/gitpod-protocol/lib/ide-frontend-service';
+
 import type ReconnectingWebSocket from "reconnecting-websocket";
 import fetchBuilder from "fetch-retry";
 import type { Terminal, ITerminalOptions, ITerminalAddon } from "xterm";
@@ -10,6 +14,7 @@ import { IXtermWindow } from "./lib/types";
 import { webLinksHandler } from "./lib/addons";
 import { runFakeTerminal } from "./lib/fakeTerminal";
 import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
+import { Emitter } from '@gitpod/gitpod-protocol/lib/util/event';
 
 const maxReconnectionRetries = 50;
 
@@ -235,3 +240,25 @@ function updateTerminalSize(): void {
 }
 
 window.onresize = () => updateTerminalSize();
+
+const onDidChangeState = new Emitter<void>();
+let state: IDEFrontendState = "initializing" as IDEFrontendState;
+window.gitpod.ideService = {
+    get state() {
+        return state;
+    },
+    get failureCause() {
+        return undefined;
+    },
+    onDidChange: onDidChangeState.event,
+    start: () => {
+        state = "ready";
+        onDidChangeState.fire();
+        return {
+            dispose: () => {
+                state = "terminated";
+                onDidChangeState.fire();
+            }
+        }
+    }
+};
