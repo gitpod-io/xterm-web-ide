@@ -3,7 +3,7 @@
     "kind": "browser",
     "version": "1.0.0",
     "title": "Terminal",
-    "icon": "xterm/icon.svg",
+    "icon": "/ide/xterm/icon.svg",
     "entrypoint": "/ide/xterm/startup.sh",
     "readinessProbe": {
         "type": "http",
