@@ -15,9 +15,9 @@ RUN cp -r dist/ /ide/
 RUN rm -rf dist/
 RUN yarn package:server
 RUN echo ${XTERM_COMMIT} > dist/commit.txt
-COPY icon.svg dist/icon.svg
 RUN cp -r dist/ out-server/
 RUN chmod -R ugo+x /ide
+COPY icon.svg /ide/icon.svg
 
 FROM scratch
 # copy static web resources in first layer to serve from blobserve
