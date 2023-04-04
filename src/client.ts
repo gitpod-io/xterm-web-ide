@@ -12,9 +12,12 @@ import { FitAddon } from "xterm-addon-fit";
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IXtermWindow } from "./lib/types";
 import { webLinksHandler } from "./lib/addons";
-import { runFakeTerminal } from "./lib/fakeTerminal";
 import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
 import { Emitter } from '@gitpod/gitpod-protocol/lib/util/event';
+import { DisposableCollection } from '@gitpod/gitpod-protocol/lib/util/disposable';
+
+const onDidChangeState = new Emitter<void>();
+let state: IDEFrontendState = "initializing" as IDEFrontendState;
 
 const maxReconnectionRetries = 50;
 
@@ -43,13 +46,6 @@ let pid: number;
 window.handledMessages = [];
 
 const defaultFonts = ["JetBrains Mono", "Fira Code", "courier-new", "courier", "monospace"];
-
-const terminalContainer = document.getElementById("terminal-container");
-
-if (terminalContainer && !terminalContainer.classList.contains("init")) {
-    createTerminal(terminalContainer);
-    terminalContainer.classList.add("init");
-}
 
 export const webSocketSettings: ReconnectingWebSocket['_options'] = {
     connectionTimeout: 5000,
@@ -127,7 +123,7 @@ async function initiateRemoteTerminal() {
     window.socket.onerror = handleDisconnected;
 }
 
-async function createTerminal(element: HTMLElement): Promise<void> {
+async function createTerminal(element: HTMLElement, toDispose: DisposableCollection): Promise<void> {
     // Clean terminal
     while (element.children.length) {
         element.removeChild(element.children[0]);
@@ -143,6 +139,7 @@ async function createTerminal(element: HTMLElement): Promise<void> {
         fontFamily: defaultFonts.join(", "),
         allowProposedApi: true
     } as ITerminalOptions);
+    toDispose.push(term);
 
     window.term = term; // Expose `term` to window for debugging purposes
     term.onResize((size) => {
@@ -156,12 +153,7 @@ async function createTerminal(element: HTMLElement): Promise<void> {
     updateTerminalSize();
     term.focus();
 
-    // fit is called within a setTimeout, cols and rows need this.
-    setTimeout(async () => {
-        const interval = runFakeTerminal(term);
-        await initiateRemoteTerminal();
-        clearInterval(interval);
-    }, 0);
+    await initiateRemoteTerminal();
 }
 
 const reloadButton = document.createElement("button");
@@ -231,6 +223,9 @@ async function runRealTerminal(terminal: Terminal, socket: WebSocket): Promise<v
     attachAddon = new AttachAddon(socket);
     terminal.loadAddon(attachAddon);
     await initAddons(term);
+
+    state = "ready";
+    onDidChangeState.fire();
 }
 
 function updateTerminalSize(): void {
@@ -241,8 +236,6 @@ function updateTerminalSize(): void {
 
 window.onresize = () => updateTerminalSize();
 
-const onDidChangeState = new Emitter<void>();
-let state: IDEFrontendState = "initializing" as IDEFrontendState;
 window.gitpod.ideService = {
     get state() {
         return state;
@@ -252,13 +245,18 @@ window.gitpod.ideService = {
     },
     onDidChange: onDidChangeState.event,
     start: () => {
-        state = "ready";
-        onDidChangeState.fire();
-        return {
+        const toDispose = new DisposableCollection();
+        toDispose.push({
             dispose: () => {
                 state = "terminated";
                 onDidChangeState.fire();
             }
+        })
+        const terminalContainer = document.getElementById("terminal-container");
+        if (terminalContainer && !terminalContainer.classList.contains("init")) {
+            createTerminal(terminalContainer, toDispose);
+            terminalContainer.classList.add("init");
         }
+        return toDispose;
     }
 };
