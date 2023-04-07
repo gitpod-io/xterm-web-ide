@@ -7,9 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "start": "yarn package && node dist/index.cjs",
+    "start": "yarn package && cd dist && ./server",
     "package:client": "rimraf out/ && yarn build && mkdir -p out/ && cp -r index.html dist/ assets/ out/",
-    "package:server": "ncc build -m server.cjs -o dist/",
+    "package:server": "go build -o dist/server .",
     "inject-commit": "git rev-parse HEAD > dist/commit.txt",
     "package": "yarn build && yarn package:server && yarn inject-commit"
   },
