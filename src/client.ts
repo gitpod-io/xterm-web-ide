@@ -52,7 +52,7 @@ export const webSocketSettings: ReconnectingWebSocket['_options'] = {
     maxReconnectionDelay: 7000,
     minReconnectionDelay: 500,
     maxRetries: maxReconnectionRetries,
-    debug: true,
+    debug: false,
 }
 
 const extraTerminalAddons: { [key: string]: ITerminalAddon } = {};
