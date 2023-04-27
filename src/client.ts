@@ -59,7 +59,6 @@ const extraTerminalAddons: { [key: string]: ITerminalAddon } = {};
 
 (async () => {
     extraTerminalAddons['ligatures'] = new (await import("xterm-addon-ligatures")).LigaturesAddon();
-    extraTerminalAddons['fit'] = new (await import("xterm-addon-fit")).FitAddon();
     extraTerminalAddons['unicode'] = new (await import("xterm-addon-unicode11")).Unicode11Addon();
     extraTerminalAddons['webLinks'] = new (await import("xterm-addon-web-links")).WebLinksAddon(webLinksHandler);
 })()
