@@ -15,7 +15,7 @@ import { webLinksHandler } from "./lib/addons";
 import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
 import { Emitter } from '@gitpod/gitpod-protocol/lib/util/event';
 import { DisposableCollection } from '@gitpod/gitpod-protocol/lib/util/disposable';
-import { debounce } from './lib/helpers';
+import { debounce, isWindows } from './lib/helpers';
 
 const onDidChangeState = new Emitter<void>();
 let state: IDEFrontendState = "initializing" as IDEFrontendState;
@@ -129,9 +129,6 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         element.removeChild(element.children[0]);
     }
 
-    const isWindows =
-        ["Windows", "Win16", "Win32", "WinCE"].indexOf(navigator.platform) >= 0;
-
     const { Terminal } = (await import("xterm"));
 
     term = new Terminal({
@@ -139,6 +136,7 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         fontFamily: defaultFonts.join(", "),
         allowProposedApi: true
     } as ITerminalOptions);
+
     toDispose.push(term);
 
     window.terminal = term;
@@ -146,6 +144,7 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         await resizeRemoteTerminal(size, pid);
         console.info(`Resized remote terminal to ${size.cols}x${size.rows}`);
     });
+
     protocol = location.protocol === "https:" ? "wss://" : "ws://";
     socketURL = `${protocol + location.hostname + (location.port ? ":" + location.port : "")
         }/terminals/`;
@@ -266,3 +265,13 @@ window.gitpod.ideService = {
         return toDispose;
     }
 };
+
+document.addEventListener("keydown", ((event) => {
+    const ctrlCmd = isWindows ? event.ctrlKey : event.metaKey;
+    if (ctrlCmd && event.key === "k") {
+        event.preventDefault();
+        if (term) {
+            term.clear();
+        }
+    }
+}));

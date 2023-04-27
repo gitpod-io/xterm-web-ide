@@ -29,3 +29,6 @@ export const debounce = (func: () => void, wait: number, trailing: boolean): () 
         timeout = setTimeout(later, wait);
     };
 }
+
+export const isWindows =
+    ["Windows", "Win16", "Win32", "WinCE"].includes(navigator.platform);
