@@ -3,7 +3,7 @@ import { IXtermWindow } from "./types";
 
 declare let window: IXtermWindow;
 
-export const resizeRemoteTerminal = (size: { cols: number; rows: number }, pid: number) => {
+export const resizeRemoteTerminal = async (size: { cols: number; rows: number }, pid: number) => {
     if (!pid) {
         return;
     }
@@ -11,7 +11,11 @@ export const resizeRemoteTerminal = (size: { cols: number; rows: number }, pid: 
     const rows = size.rows;
     const url = `/terminals/${pid}/size?cols=${cols}&rows=${rows}`;
 
-    fetch(url, { method: "POST" });
+    try {
+        await fetch(url, { method: "POST" });
+    } catch (e) {
+        console.error(`Failed to resize the remote shell: ${e}`);
+    }
 }
 
 export const initiateRemoteCommunicationChannelSocket = async (protocol: string) => {

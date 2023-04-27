@@ -142,8 +142,8 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
     toDispose.push(term);
 
     window.term = term; // Expose `term` to window for debugging purposes
-    term.onResize((size) => {
-        resizeRemoteTerminal(size, pid);
+    term.onResize(async (size) => {
+        await resizeRemoteTerminal(size, pid);
     });
     protocol = location.protocol === "https:" ? "wss://" : "ws://";
     socketURL = `${protocol + location.hostname + (location.port ? ":" + location.port : "")
