@@ -140,9 +140,10 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
     } as ITerminalOptions);
     toDispose.push(term);
 
-    window.term = term; // Expose `term` to window for debugging purposes
+    window.terminal = term;
     term.onResize(async (size) => {
         await resizeRemoteTerminal(size, pid);
+        console.info(`Resized remote terminal to ${size.cols}x${size.rows}`);
     });
     protocol = location.protocol === "https:" ? "wss://" : "ws://";
     socketURL = `${protocol + location.hostname + (location.port ? ":" + location.port : "")
@@ -228,8 +229,12 @@ async function runRealTerminal(terminal: Terminal, socket: WebSocket): Promise<v
 }
 
 function updateTerminalSize(): void {
+    if (!window.terminal) {
+        console.warn("Terminal not yet initialized. Aborting resize.");
+        return;
+    }
     const fitAddon = new FitAddon();
-    term.loadAddon(fitAddon);
+    window.terminal.loadAddon(fitAddon);
     fitAddon.fit();
 }
 

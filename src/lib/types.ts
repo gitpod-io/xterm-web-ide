@@ -10,7 +10,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 export type AddonType = "attach" | "fit" | "unicode11" | "web-links" | "webgl" | "ligatures";
 
 export interface IXtermWindow extends Window {
-  term: Terminal;
+  terminal: Terminal | undefined;
   socket: ReconnectingWebSocket;
   handledMessages: string[];
 }
