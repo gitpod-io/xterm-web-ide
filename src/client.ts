@@ -15,6 +15,7 @@ import { webLinksHandler } from "./lib/addons";
 import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
 import { Emitter } from '@gitpod/gitpod-protocol/lib/util/event';
 import { DisposableCollection } from '@gitpod/gitpod-protocol/lib/util/disposable';
+import { debounce } from './lib/helpers';
 
 const onDidChangeState = new Emitter<void>();
 let state: IDEFrontendState = "initializing" as IDEFrontendState;
@@ -238,7 +239,8 @@ function updateTerminalSize(): void {
     fitAddon.fit();
 }
 
-window.onresize = () => updateTerminalSize();
+const debouncedUpdateTerminalSize = debounce(updateTerminalSize, 200, true);
+window.onresize = () => debouncedUpdateTerminalSize();
 
 window.gitpod.ideService = {
     get state() {
