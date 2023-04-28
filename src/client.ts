@@ -155,6 +155,19 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         }
     });
 
+    let buffer = '';
+    term.onData((data) => {
+        buffer += data;
+
+        const unwantedSequence = '\x1b[0;276;0c';
+        if (buffer.includes(unwantedSequence)) {
+            buffer = buffer.replaceAll(unwantedSequence, '');
+        }
+
+        term.write(buffer);
+        buffer = '';
+    });
+
     toDispose.push(term);
 
     window.terminal = term;
