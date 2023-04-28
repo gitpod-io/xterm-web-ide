@@ -137,6 +137,15 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         allowProposedApi: true
     } as ITerminalOptions);
 
+    term.attachCustomKeyEventHandler((event) => {
+        switch (event.code) {
+            case "F12":
+                return false;
+            default:
+                return true;
+        }
+    });
+
     toDispose.push(term);
 
     window.terminal = term;
