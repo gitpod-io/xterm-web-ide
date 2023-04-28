@@ -138,7 +138,16 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
     } as ITerminalOptions);
 
     term.attachCustomKeyEventHandler((event) => {
-        switch (event.code) {
+        const ctrlCmd = isWindows ? event.ctrlKey : event.metaKey;
+        switch (event.key) {
+            case "k":
+                if (ctrlCmd) {
+                    event.preventDefault();
+                    if (term) {
+                        term.clear();
+                    }
+                }
+                return false;
             case "F12":
                 return false;
             default:
@@ -274,13 +283,3 @@ window.gitpod.ideService = {
         return toDispose;
     }
 };
-
-document.addEventListener("keydown", ((event) => {
-    const ctrlCmd = isWindows ? event.ctrlKey : event.metaKey;
-    if (ctrlCmd && event.key === "k") {
-        event.preventDefault();
-        if (term) {
-            term.clear();
-        }
-    }
-}));
