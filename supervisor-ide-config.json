@@ -16,7 +16,7 @@
         "VISUAL": "$EDITOR",
         "GP_OPEN_EDITOR": "$EDITOR",
         "GIT_EDITOR": "$EDITOR",
-        "GP_EXTERNAL_BROWSER": "/ide/xterm/startup.sh --openExternal --port 23000 ${term.pid}",
+        "GP_EXTERNAL_BROWSER": "/ide/xterm/startup.sh --openExternal --port 23000",
         "GP_PREVIEW_BROWSER": "$GP_EXTERNAL_BROWSER"
     }
 }
