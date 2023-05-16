@@ -144,10 +144,12 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
                 if (ctrlCmd) {
                     event.preventDefault();
                     if (term) {
+                        // todo: make sure this is propagated across clients
                         term.clear();
+                        return false;
                     }
                 }
-                return false;
+                return true;
             case "F12":
                 return false;
             default:
