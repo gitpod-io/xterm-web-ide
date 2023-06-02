@@ -14,6 +14,10 @@ const argv = require('minimist')(process.argv.slice(2), { boolean: ["openExterna
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 23000;
 const host = '0.0.0.0';
 
+const config = {
+  reuseTerminals: false
+}
+
 const rateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 50,
@@ -64,7 +68,7 @@ function startServer() {
       return;
     }
 
-    if (Object.keys(terminals).length > 0) {
+    if (config.reuseTerminals && Object.keys(terminals).length > 0) {
       const term = Object.values(terminals)[0];
       console.log(`Using existing terminal with PID ${term.pid}`);
       res.send(term.pid.toString());
