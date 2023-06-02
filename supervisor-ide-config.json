@@ -13,6 +13,7 @@
     },
     "env": {
         "EDITOR": "/usr/bin/nano",
+        "SHELL": "/bin/bash",
         "VISUAL": "$EDITOR",
         "GP_OPEN_EDITOR": "$EDITOR",
         "GIT_EDITOR": "$EDITOR",

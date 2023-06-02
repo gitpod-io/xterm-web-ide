@@ -79,7 +79,7 @@ function startServer() {
     const env = Object.assign({}, process.env);
     env['COLORTERM'] = 'truecolor';
 
-    const term = pty.spawn('bash', [], {
+    const term = pty.spawn(process.env.SHELL || '/bin/bash', [], {
       name: 'xterm-256color',
       cols: cols || 80,
       rows: rows || 24,
