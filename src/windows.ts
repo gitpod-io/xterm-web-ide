@@ -23,7 +23,7 @@ async function createTerminalWindow() {
     //@ts-ignore
     const terminalWindow = new WinBox({
         title: "Terminal",
-        width: "400px",
+        width: "800px",
         height: "400px",
         x: "center",
         y: "center",
@@ -33,7 +33,8 @@ async function createTerminalWindow() {
     document.body.appendChild(terminalElement);
 
     const terminal = await createTerminal(terminalWindow.body, toDispose);
-    terminalWindow.onresize = debounce(() => updateTerminalSize(terminal), 200, true)
+    terminalWindow.onresize = debounce(() => updateTerminalSize(terminal), 200, true);
+    terminalWindow.fullscreen
 }
 
 createTerminalWindow();

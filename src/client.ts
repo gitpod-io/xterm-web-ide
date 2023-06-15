@@ -118,9 +118,9 @@ async function initiateRemoteTerminal(terminal: Terminal) {
         await runRealTerminal(term, socket as WebSocket);
     };
     //@ts-ignore
-    socket.onclose = handleDisconnected;
+    socket.onclose = (e) => handleDisconnected(e, socket);
     //@ts-ignore
-    socket.onerror = handleDisconnected;
+    socket.onerror = (e) => handleDisconnected(e, socket);
 }
 
 export async function createTerminal(element: HTMLElement, toDispose: DisposableCollection): Promise<Terminal> {
@@ -201,9 +201,9 @@ const reconnectButton = document.createElement("button");
 reconnectButton.innerText = "Reconnect";
 reconnectButton.onclick = () => window.socket.reconnect();
 
-function handleDisconnected(e: CloseEvent) {
+function handleDisconnected(e: CloseEvent, socket: ReconnectingWebSocket) {
 
-    if (window.socket.retryCount < webSocketSettings.maxRetries) {
+    if (socket.retryCount < webSocketSettings.maxRetries) {
         console.info("Tried to reconnect WS")
         return;
     }
