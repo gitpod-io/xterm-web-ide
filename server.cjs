@@ -33,6 +33,12 @@ function startServer() {
   const terminals = {};
   const logs = {};
 
+  const initTerminal = (term) => {
+    term.write(`export GP_EXTERNAL_BROWSER="/ide/startup.sh --openExternal --port ${port} ${term.pid}"\r`);
+    //term.write(`export GP_EXTERNAL_BROWSER="/workspace/xterm-web-ide/startup.sh --openExternal ${term.pid} --port ${port}"\r`);
+    term.write('clear\r');
+  }
+
   app.get('/', (_req, res) => {
     res.sendFile(__dirname + '/index.html');
   });
@@ -87,6 +93,7 @@ function startServer() {
       env,
       encoding: null
     });
+    initTerminal(term);
 
     console.log(`Created terminal with PID: ${term.pid}`);
     terminals[term.pid] = term;
@@ -139,8 +146,15 @@ function startServer() {
   });
 
   const em = new events.EventEmitter();
-  app.ws('/terminals/remote-communication-channel/', (ws, _req) => {
-    console.info(`Client joined remote communication channel`);
+  app.ws('/terminals/remote-communication-channel/:pid', (ws, req) => {
+
+    const pid = parseInt(req.params.pid);
+
+    if (!terminals[pid]) {
+      console.error("Should not connect to missing terminal");
+    }
+
+    console.info(`Client joined remote communication channel of ${pid}`);
 
     ws.on('message', (msg) => {
       try {
@@ -151,7 +165,7 @@ function startServer() {
       }
 
       em.emit('message', msg);
-      console.info(`Client sent message: ${JSON.stringify(msg)}`);
+      console.info(`Client sent message to terminal ${pid}: ${JSON.stringify(msg)}`);
     });
 
     em.on('message', (msg) => {
@@ -212,15 +226,21 @@ function startServer() {
 }
 
 if (argv.openExternal) {
-  const url = argv._[0];
+  const pid = argv._[0];
+  const url = argv._[1];
   const { port } = argv;
+
+  if (!pid) {
+    console.error("Please provide a PID");
+    process.exit(1);
+  }
 
   if (!url) {
     console.error("Please provide a URL");
     process.exit(1);
   }
 
-  const webSocketUrl = `ws://localhost:${port}/terminals/remote-communication-channel/`;
+  const webSocketUrl = `ws://localhost:${port}/terminals/remote-communication-channel/${pid}`;
   const ws = new WebSocket(webSocketUrl);
   console.info(webSocketUrl)
   ws.on('open', () => {

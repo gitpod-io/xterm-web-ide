@@ -109,7 +109,7 @@ async function initiateRemoteTerminal() {
     pid = parseInt(serverProcessId);
     socketURL += serverProcessId;
 
-    await initiateRemoteCommunicationChannelSocket(protocol);
+    await initiateRemoteCommunicationChannelSocket(protocol, pid);
     window.socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
     window.socket.onopen = async () => {
         outputDialog.close();
