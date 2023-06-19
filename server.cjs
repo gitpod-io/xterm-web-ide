@@ -43,6 +43,10 @@ function startServer() {
     res.sendFile(__dirname + '/index.html');
   });
 
+  app.get('/windows', (_req, res) => {
+    res.sendFile(__dirname + '/windows.html');
+  });
+
   app.get('/version', (_req, res) => {
     res.sendFile(__dirname + '/commit.txt');
   });

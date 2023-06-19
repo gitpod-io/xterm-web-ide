@@ -1369,6 +1369,11 @@
   resolved "https://registry.yarnpkg.com/@types/trusted-types/-/trusted-types-2.0.2.tgz#fc25ad9943bcac11cceb8168db4f275e0e72e756"
   integrity sha512-F5DIZ36YVLE+PN+Zwws4kJogq47hNgX3Nx6WyDJ3kcplxyke3XIzB8uK5n/Lpm1HBsbGzd6nmGehL8cPekP+Tg==
 
+"@types/winbox@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@types/winbox/-/winbox-0.2.1.tgz#cfab903a7021058271a72ded4965a9348e710349"
+  integrity sha512-fN/UQjitix7v3yDmpvzKSnDyKIiOhU5LdAj5Wcf/eRpGapoLwBELAwvVZY/2OBw23PyPKwGZ07oZxBHyIO/e3A==
+
 "@vercel/ncc@^0.36.1":
   version "0.36.1"
   resolved "https://registry.yarnpkg.com/@vercel/ncc/-/ncc-0.36.1.tgz#d4c01fdbbe909d128d1bf11c7f8b5431654c5b95"
@@ -3997,6 +4002,11 @@ which-typed-array@^1.1.9:
     gopd "^1.0.1"
     has-tostringtag "^1.0.0"
     is-typed-array "^1.1.10"
+
+winbox@^0.2.6:
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/winbox/-/winbox-0.2.6.tgz#9e46eb23c09394166262e5bcb074e4f240c8ba4c"
+  integrity sha512-P/Tqjcf4bA0Hr1lqR1YliQsisV8xf+t56xgCtqWN8Urw9RLonYSVQGYw+qILp9tgkPs1o7e1dsl6dskaS6GudQ==
 
 workbox-background-sync@6.5.4:
   version "6.5.4"

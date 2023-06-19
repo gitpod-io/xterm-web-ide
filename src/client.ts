@@ -85,8 +85,8 @@ async function initAddons(term: Terminal): Promise<void> {
     term.unicode.activeVersion = '11';
 }
 
-async function initiateRemoteTerminal() {
-    updateTerminalSize();
+async function initiateRemoteTerminal(terminal: Terminal) {
+    updateTerminalSize(terminal);
 
     const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
 
@@ -110,20 +110,20 @@ async function initiateRemoteTerminal() {
     socketURL += serverProcessId;
 
     await initiateRemoteCommunicationChannelSocket(protocol, pid);
-    window.socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
-    window.socket.onopen = async () => {
+    let socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
+    socket.onopen = async () => {
         outputDialog.close();
         (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
 
-        await runRealTerminal(term, window.socket as WebSocket);
+        await runRealTerminal(term, socket as WebSocket);
     };
     //@ts-ignore
-    window.socket.onclose = handleDisconnected;
+    socket.onclose = handleDisconnected;
     //@ts-ignore
-    window.socket.onerror = handleDisconnected;
+    socket.onerror = handleDisconnected;
 }
 
-async function createTerminal(element: HTMLElement, toDispose: DisposableCollection): Promise<void> {
+export async function createTerminal(element: HTMLElement, toDispose: DisposableCollection): Promise<Terminal> {
     // Clean terminal
     while (element.children.length) {
         element.removeChild(element.children[0]);
@@ -182,10 +182,15 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         }/terminals/`;
 
     term.open(element);
-    updateTerminalSize();
+    updateTerminalSize(term);
     term.focus();
 
-    await initiateRemoteTerminal();
+    await initiateRemoteTerminal(term);
+
+    const debouncedUpdateTerminalSize = debounce(() => updateTerminalSize(term), 200, true);
+    element.onresize = () => debouncedUpdateTerminalSize();
+
+    return term;
 }
 
 const reloadButton = document.createElement("button");
@@ -260,18 +265,12 @@ async function runRealTerminal(terminal: Terminal, socket: WebSocket): Promise<v
     onDidChangeState.fire();
 }
 
-function updateTerminalSize(): void {
-    if (!window.terminal) {
-        console.warn("Terminal not yet initialized. Aborting resize.");
-        return;
-    }
+export function updateTerminalSize(terminal: Terminal): void {
+    console.debug("Updating terminal size");
     const fitAddon = new FitAddon();
-    window.terminal.loadAddon(fitAddon);
+    terminal.loadAddon(fitAddon);
     fitAddon.fit();
 }
-
-const debouncedUpdateTerminalSize = debounce(updateTerminalSize, 200, true);
-window.onresize = () => debouncedUpdateTerminalSize();
 
 window.gitpod.ideService = {
     get state() {
@@ -291,7 +290,7 @@ window.gitpod.ideService = {
         })
         const terminalContainer = document.getElementById("terminal-container");
         if (terminalContainer && !terminalContainer.classList.contains("init")) {
-            createTerminal(terminalContainer, toDispose);
+            //createTerminal(terminalContainer, toDispose);
             terminalContainer.classList.add("init");
         }
         return toDispose;
