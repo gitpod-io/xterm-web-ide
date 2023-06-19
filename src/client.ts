@@ -85,7 +85,7 @@ async function initAddons(term: Terminal): Promise<void> {
     term.unicode.activeVersion = '11';
 }
 
-async function initiateRemoteTerminal(terminal: Terminal) {
+async function initiateRemoteTerminal(terminal: Terminal): Promise<void | ReconnectingWebSocket> {
     updateTerminalSize(terminal);
 
     const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
@@ -121,9 +121,11 @@ async function initiateRemoteTerminal(terminal: Terminal) {
     socket.onclose = (e) => handleDisconnected(e, socket);
     //@ts-ignore
     socket.onerror = (e) => handleDisconnected(e, socket);
+
+    return socket;
 }
 
-export async function createTerminal(element: HTMLElement, toDispose: DisposableCollection): Promise<Terminal> {
+export async function createTerminal(element: HTMLElement, toDispose: DisposableCollection): Promise<{terminal: Terminal; socket: ReconnectingWebSocket}> {
     // Clean terminal
     while (element.children.length) {
         element.removeChild(element.children[0]);
@@ -185,12 +187,16 @@ export async function createTerminal(element: HTMLElement, toDispose: Disposable
     updateTerminalSize(term);
     term.focus();
 
-    await initiateRemoteTerminal(term);
+    const terminalSocket = await initiateRemoteTerminal(term);
+
+    if (!terminalSocket) {
+        throw new Error("Coudln't set up a remote connection to the terminal process");
+    }
 
     const debouncedUpdateTerminalSize = debounce(() => updateTerminalSize(term), 200, true);
     element.onresize = () => debouncedUpdateTerminalSize();
 
-    return term;
+    return {terminal: term, socket: terminalSocket};
 }
 
 const reloadButton = document.createElement("button");

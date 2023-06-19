@@ -32,9 +32,12 @@ async function createTerminalWindow() {
 
     document.body.appendChild(terminalElement);
 
-    const terminal = await createTerminal(terminalWindow.body, toDispose);
+    const { terminal, socket } = await createTerminal(terminalWindow.body, toDispose);
     terminalWindow.onresize = debounce(() => updateTerminalSize(terminal), 200, true);
-    terminalWindow.fullscreen
+    terminalWindow.onclose = (_force) => {
+        socket.close(); 
+        return false
+    };
 }
 
 createTerminalWindow();
