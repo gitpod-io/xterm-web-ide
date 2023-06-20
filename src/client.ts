@@ -110,8 +110,8 @@ async function initiateRemoteTerminal(terminal: Terminal): Promise<void | Reconn
     pid = parseInt(serverProcessId);
     socketURL += serverProcessId;
 
-    await initiateRemoteCommunicationChannelSocket(protocol, pid);
-    let socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
+    await initiateRemoteCommunicationChannelSocket(protocol, pid, term);
+    const socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
     socket.onopen = async () => {
         outputDialog.close();
         (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();

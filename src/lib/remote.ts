@@ -1,3 +1,4 @@
+import type { Terminal } from "xterm";
 import { webSocketSettings } from "../client";
 import { IXtermWindow } from "./types";
 
@@ -20,7 +21,7 @@ export const resizeRemoteTerminal = async (size: { cols: number; rows: number },
 
 type TerminalState = 'open' | 'closed';
 
-export const initiateRemoteCommunicationChannelSocket = async (protocol: string, pid: number) => {
+export const initiateRemoteCommunicationChannelSocket = async (protocol: string, pid: number, terminal: Terminal) => {
     const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
     const socket = new ReconnectingWebSocket(`${protocol + location.hostname + (location.port ? ":" + location.port : "")}/terminals/remote-communication-channel/${pid}`, [], webSocketSettings);
 
@@ -50,7 +51,9 @@ export const initiateRemoteCommunicationChannelSocket = async (protocol: string,
                 switch (newState) {
                     case "closed": {
                         console.warn("Should close terminal");
-                        // todo: implement closing
+                        if (terminal.element?.parentElement?.classList.contains("wb-body")) {
+                            terminal.element.parentElement?.parentElement?.remove()
+                        }
                     }
                 }
         }

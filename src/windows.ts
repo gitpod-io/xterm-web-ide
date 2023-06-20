@@ -40,6 +40,7 @@ export async function createTerminalWindow(winboxOptions: Params = {}) {
     document.body.appendChild(terminalElement);
 
     const { terminal, socket } = await createTerminal(terminalWindow.body, toDispose);
+
     terminalWindow.onresize = debounce(() => updateTerminalSize(terminal), 200, true);
     terminalWindow.onclose = (_force) => {
         socket.close();
