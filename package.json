@@ -30,6 +30,7 @@
     "buffer": "^6.0.3",
     "express-rate-limit": "^6.7.0",
     "fetch-retry": "^5.0.3",
+    "ninja-keys": "^1.2.2",
     "node": "16",
     "reconnecting-websocket": "^4.4.0",
     "winbox": "^0.2.6",

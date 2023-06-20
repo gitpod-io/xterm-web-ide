@@ -16,6 +16,7 @@ import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
 import { Emitter } from '@gitpod/gitpod-protocol/lib/util/event';
 import { DisposableCollection } from '@gitpod/gitpod-protocol/lib/util/disposable';
 import { debounce, isWindows } from './lib/helpers';
+import "./lib/pallete";
 
 const onDidChangeState = new Emitter<void>();
 let state: IDEFrontendState = "initializing" as IDEFrontendState;

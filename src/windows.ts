@@ -10,7 +10,7 @@ declare global {
     }
 }
 
-async function createTerminalWindow() {
+export async function createTerminalWindow() {
     // Create element for terminal
     const terminalElement = document.createElement("div");
 
@@ -41,13 +41,5 @@ async function createTerminalWindow() {
 }
 
 createTerminalWindow();
-
-// Add a button to open the terminal
-const terminalButton = document.createElement("button");
-terminalButton.innerText = "Open Terminal";
-terminalButton.onclick = () => {
-    createTerminalWindow();
-};
-document.body.appendChild(terminalButton);
 
 export { };
