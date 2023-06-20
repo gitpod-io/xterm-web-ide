@@ -3,6 +3,7 @@
 import { DisposableCollection } from "@gitpod/gitpod-protocol";
 import { createTerminal, updateTerminalSize } from "./client";
 import { debounce } from "./lib/helpers";
+import type { Params } from "winbox";
 
 declare global {
     interface Window {
@@ -10,7 +11,7 @@ declare global {
     }
 }
 
-export async function createTerminalWindow() {
+export async function createTerminalWindow(winboxOptions: Params = {}) {
     // Create element for terminal
     const terminalElement = document.createElement("div");
 
@@ -20,14 +21,20 @@ export async function createTerminalWindow() {
         }
     })
 
+    if (Object.keys(winboxOptions).length === 0) {
+        winboxOptions = {
+            width: "800px",
+            height: "400px",
+            x: "center",
+            y: "center",
+        }
+    }
+
     //@ts-ignore
     const terminalWindow = new WinBox({
         title: "Terminal",
-        width: "800px",
-        height: "400px",
-        x: "center",
-        y: "center",
         root: terminalElement,
+        ...winboxOptions
     });
 
     document.body.appendChild(terminalElement);
@@ -35,7 +42,7 @@ export async function createTerminalWindow() {
     const { terminal, socket } = await createTerminal(terminalWindow.body, toDispose);
     terminalWindow.onresize = debounce(() => updateTerminalSize(terminal), 200, true);
     terminalWindow.onclose = (_force) => {
-        socket.close(); 
+        socket.close();
         return false
     };
 }
