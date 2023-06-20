@@ -191,7 +191,7 @@ export async function createTerminal(element: HTMLElement, toDispose: Disposable
     const terminalSocket = await initiateRemoteTerminal(term);
 
     if (!terminalSocket) {
-        throw new Error("Coudln't set up a remote connection to the terminal process");
+        throw new Error("Couldn't set up a remote connection to the terminal process");
     }
 
     const debouncedUpdateTerminalSize = debounce(() => updateTerminalSize(term), 200, true);

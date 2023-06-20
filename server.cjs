@@ -18,6 +18,37 @@ const config = {
   reuseTerminals: false
 }
 
+/**
+ * @param {number} port
+ * @param {number} pid
+ * @param {Object} data 
+ */
+async function sendExternalMessage(port, pid, data) {
+  return new Promise((resolve, reject) => {
+    const webSocketUrl = `ws://localhost:${port}/terminals/remote-communication-channel/${pid}`;
+    const ws = new WebSocket(webSocketUrl);
+    console.info(webSocketUrl)
+    ws.on('open', () => {
+      const id = crypto.randomUUID();
+      const newData = { ...data, id };
+      try {
+        ws.send(JSON.stringify(newData));
+        console.info("Sent external message");
+        ws.close();
+        resolve(null);
+      } catch (err) {
+        console.error('Failed to send message:', err);
+        reject(err);
+      }
+    });
+
+    ws.on('error', (err) => {
+      console.error('WebSocket error:', err);
+      reject(err);
+    });
+  });
+}
+
 const rateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 50,
@@ -34,8 +65,8 @@ function startServer() {
   const logs = {};
 
   const initTerminal = (term) => {
-    term.write(`export GP_EXTERNAL_BROWSER="/ide/startup.sh --openExternal --port ${port} ${term.pid}"\r`);
-    //term.write(`export GP_EXTERNAL_BROWSER="/workspace/xterm-web-ide/startup.sh --openExternal ${term.pid} --port ${port}"\r`);
+    //term.write(`export GP_EXTERNAL_BROWSER="/ide/startup.sh --openExternal --port ${port} ${term.pid}"\r`);
+    term.write(`export GP_EXTERNAL_BROWSER="/workspace/xterm-web-ide/startup.sh --openExternal ${term.pid} --port ${port}"\r`);
     term.write('clear\r');
   }
 
@@ -178,7 +209,8 @@ function startServer() {
   });
 
   app.ws('/terminals/:pid', (ws, req) => {
-    const term = terminals[parseInt(req.params.pid)];
+    const pid = parseInt(req.params.pid, 10);
+    const term = terminals[pid];
     console.log(`Client connected to terminal ${term.pid}`);
     ws.send(logs[term.pid]);
 
@@ -215,6 +247,7 @@ function startServer() {
 
     term.on('exit', ((_e) => {
       ws.send(`\r\nThis terminal has been closed. Refresh the page to create a new one.`);
+      sendExternalMessage(port, pid, { action: "stateUpdate", data: "closed" })
     }));
 
     ws.on('message', (msg) => {
@@ -244,16 +277,8 @@ if (argv.openExternal) {
     process.exit(1);
   }
 
-  const webSocketUrl = `ws://localhost:${port}/terminals/remote-communication-channel/${pid}`;
-  const ws = new WebSocket(webSocketUrl);
-  console.info(webSocketUrl)
-  ws.on('open', () => {
-    const id = crypto.randomUUID();
-    ws.send(JSON.stringify({ action: "openUrl", data: url, id }));
-    console.info("Sent openUrl message");
-    ws.close();
-    process.exit(0);
-  });
+  sendExternalMessage(port, parseInt(pid, 10), { action: "openUrl", data: url }).then(() => process.exit(0))
+
 } else if (require.main === module) {
   startServer()
 }

@@ -18,6 +18,8 @@ export const resizeRemoteTerminal = async (size: { cols: number; rows: number },
     }
 }
 
+type TerminalState = 'open' | 'closed';
+
 export const initiateRemoteCommunicationChannelSocket = async (protocol: string, pid: number) => {
     const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
     const socket = new ReconnectingWebSocket(`${protocol + location.hostname + (location.port ? ":" + location.port : "")}/terminals/remote-communication-channel/${pid}`, [], webSocketSettings);
@@ -38,10 +40,19 @@ export const initiateRemoteCommunicationChannelSocket = async (protocol: string,
             return;
         }
 
-        if (messageData.action === "openUrl") {
-            const url = messageData.data;
-            console.debug(`Opening URL: ${url}`);
-            window.open(url, "_blank");
+        switch (messageData.action) {
+            case "openUrl":
+                const url = messageData.data;
+                console.debug(`Opening URL: ${url}`);
+                window.open(url, "_blank");
+            case "stateUpdate":
+                const newState: TerminalState = messageData.data;
+                switch (newState) {
+                    case "closed": {
+                        console.warn("Should close terminal");
+                        // todo: implement closing
+                    }
+                }
         }
 
         window.handledMessages.push(messageData.id);
