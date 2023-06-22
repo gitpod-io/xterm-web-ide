@@ -85,7 +85,7 @@ async function initAddons(term: Terminal): Promise<void> {
     term.unicode.activeVersion = '11';
 }
 
-async function initiateRemoteTerminal(terminal: Terminal) {
+async function initiateRemoteTerminal(terminal: Terminal): Promise<void | ReconnectingWebSocket> {
     updateTerminalSize(terminal);
 
     const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
@@ -110,7 +110,8 @@ async function initiateRemoteTerminal(terminal: Terminal) {
     socketURL += serverProcessId;
 
     await initiateRemoteCommunicationChannelSocket(protocol);
-    let socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
+
+    const socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
     socket.onopen = async () => {
         outputDialog.close();
         (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
@@ -121,9 +122,11 @@ async function initiateRemoteTerminal(terminal: Terminal) {
     socket.onclose = handleDisconnected;
     //@ts-ignore
     socket.onerror = handleDisconnected;
+
+    return socket;
 }
 
-async function createTerminal(element: HTMLElement, toDispose: DisposableCollection): Promise<void> {
+async function createTerminal(element: HTMLElement, toDispose: DisposableCollection): Promise<{ terminal: Terminal; socket: ReconnectingWebSocket }> {
     // Clean terminal
     while (element.children.length) {
         element.removeChild(element.children[0]);
@@ -185,10 +188,16 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
     updateTerminalSize(term);
     term.focus();
 
-    await initiateRemoteTerminal(term);
+    const terminalSocket = await initiateRemoteTerminal(term);
+
+    if (!terminalSocket) {
+        throw new Error("Couldn't set up a remote connection to the terminal process");
+    }
 
     const debouncedUpdateTerminalSize = debounce(() => updateTerminalSize(term), 200, true);
     window.onresize = () => debouncedUpdateTerminalSize();
+
+    return { terminal: term, socket: terminalSocket };
 }
 
 const reloadButton = document.createElement("button");
@@ -291,8 +300,7 @@ window.gitpod.ideService = {
         })
         const terminalContainer = document.getElementById("terminal-container");
         if (terminalContainer && !terminalContainer.classList.contains("init")) {
-            createTerminal(terminalContainer, toDispose);
-            terminalContainer.classList.add("init");
+            createTerminal(terminalContainer, toDispose).then(() => terminalContainer.classList.add("init"));
         }
         return toDispose;
     }
