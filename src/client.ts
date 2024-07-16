@@ -160,16 +160,12 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         }
     });
 
-    let buffer = '';
+    const unwantedSequence = '\x1b[0;276;0c';
     term.onData((data) => {
-        buffer += data;
-
-        const unwantedSequence = '\x1b[0;276;0c';
-        if (buffer.includes(unwantedSequence)) {
-            buffer = buffer.replaceAll(unwantedSequence, '');
-            term.write(buffer);
+        if (data.includes(unwantedSequence)) {
+            const cleanedData = data.replaceAll(unwantedSequence, '');
+            term.write(cleanedData);
         }
-        buffer = '';
     });
 
     toDispose.push(term);
