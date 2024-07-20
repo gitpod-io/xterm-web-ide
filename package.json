@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/filiptronicek/xterm-web-ide.git"
+    "url": "git+https://github.com/gitpod-io/xterm-web-ide.git"
   },
   "keywords": [],
   "author": "",
@@ -23,9 +23,9 @@
   "type": "module",
   "packageManager": "yarn@1.22.22",
   "bugs": {
-    "url": "https://github.com/filiptronicek/xterm-web-ide/issues"
+    "url": "https://github.com/gitpod-io/xterm-web-ide/issues"
   },
-  "homepage": "https://github.com/filiptronicek/xterm-web-ide#readme",
+  "homepage": "https://github.com/gitpod-io/xterm-web-ide#readme",
   "dependencies": {
     "@gitpod/gitpod-protocol": "^0.1.5-main.6983",
     "buffer": "^6.0.3",
