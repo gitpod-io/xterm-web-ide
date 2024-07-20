@@ -47,7 +47,7 @@
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
-    "@vercel/ncc": "^0.36.1",
+    "@vercel/ncc": "^0.38.1",
     "deepmerge": "^4.3.0",
     "express": "^4.19.2",
     "express-ws": "^5.0.2",

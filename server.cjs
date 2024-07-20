@@ -107,7 +107,6 @@ function startServer() {
   });
 
   app.post('/terminals/:pid/size', rateLimiter, (req, res) => {
-
     if (!req.query.cols || !req.query.rows) {
       res.statusCode = 400;
       res.send('`cols` and `rows` are required');
