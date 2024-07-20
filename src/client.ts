@@ -15,7 +15,8 @@ import { webLinksHandler } from "./lib/addons";
 import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
 import { Emitter } from '@gitpod/gitpod-protocol/lib/util/event';
 import { DisposableCollection } from '@gitpod/gitpod-protocol/lib/util/disposable';
-import { debounce, isWindows } from './lib/helpers';
+import { isWindows } from './lib/helpers';
+import debounce from "lodash/debounce"
 
 const onDidChangeState = new Emitter<void>();
 let state: IDEFrontendState = "initializing" as IDEFrontendState;
@@ -191,7 +192,7 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         throw new Error("Couldn't set up a remote connection to the terminal process");
     }
 
-    const debouncedUpdateTerminalSize = debounce(() => updateTerminalSize(term), 200, true);
+    const debouncedUpdateTerminalSize = debounce(() => updateTerminalSize(term), 200, { trailing: true });
     window.onresize = () => debouncedUpdateTerminalSize();
 
     return { terminal: term, socket: terminalSocket };

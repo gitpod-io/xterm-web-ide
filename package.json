@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "start": "yarn package && node dist/index.cjs",
     "package:client": "rimraf out/ && yarn build && mkdir -p out/ && cp -r index.html dist/ assets/ out/",
-    "package:server": "ncc build -m server.cjs -o dist/",
+    "package:server": "ncc build -m server.cjs -o dist/ --target es2022 --source-map",
     "inject-commit": "git rev-parse HEAD > dist/commit.txt",
     "package": "yarn build && yarn package:server && yarn inject-commit"
   },
@@ -39,6 +39,7 @@
     "buffer": "^6.0.3",
     "express-rate-limit": "^6.7.0",
     "fetch-retry": "^5.0.3",
+    "lodash": "^4.17.21",
     "node": "16",
     "reconnecting-websocket": "^4.4.0"
   },
@@ -47,6 +48,8 @@
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
+    "@types/lodash": "^4.17.7",
+    "@types/node": "^20.14.11",
     "@vercel/ncc": "^0.38.1",
     "deepmerge": "^4.3.0",
     "express": "^4.19.2",
