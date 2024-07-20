@@ -21,6 +21,7 @@
   "author": "",
   "license": "MIT",
   "type": "module",
+  "packageManager": "yarn@1.22.22",
   "bugs": {
     "url": "https://github.com/filiptronicek/xterm-web-ide/issues"
   },
