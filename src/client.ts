@@ -72,6 +72,7 @@ async function initAddons(term: Terminal): Promise<void> {
     const webglRenderer = new (await import("xterm-addon-webgl")).WebglAddon;
     try {
         term.loadAddon(webglRenderer);
+        console.debug("Loaded webgl renderer");
         webglRenderer.onContextLoss(() => {
             webglRenderer.dispose();
         });
