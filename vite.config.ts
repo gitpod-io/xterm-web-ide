@@ -6,6 +6,6 @@ export default defineConfig(({ command, mode }) => ({
     manifest: false,
     minify: mode === 'development' ? false : 'terser',
     outDir: 'dist',
-    sourcemap: command === 'serve' ? 'inline' : false,
+    sourcemap: command === 'serve' ? 'inline' : true,
   },
 }));
