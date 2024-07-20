@@ -4,10 +4,10 @@ import type { IDEFrontendState } from '@gitpod/gitpod-protocol/lib/ide-frontend-
 
 import type ReconnectingWebSocket from "reconnecting-websocket";
 import fetchBuilder from "fetch-retry";
-import type { Terminal, ITerminalOptions, ITerminalAddon } from "xterm";
+import type { Terminal, ITerminalOptions, ITerminalAddon } from "@xterm/xterm";
 
-import { AttachAddon } from "xterm-addon-attach";
-import { FitAddon } from "xterm-addon-fit";
+import { AttachAddon } from "@xterm/addon-attach";
+import { FitAddon } from "@xterm/addon-fit";
 
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IXtermWindow } from "./lib/types";
@@ -59,9 +59,9 @@ export const webSocketSettings: ReconnectingWebSocket['_options'] = {
 const extraTerminalAddons: { [key: string]: ITerminalAddon } = {};
 
 (async () => {
-    extraTerminalAddons['ligatures'] = new (await import("xterm-addon-ligatures")).LigaturesAddon();
-    extraTerminalAddons['unicode'] = new (await import("xterm-addon-unicode11")).Unicode11Addon();
-    extraTerminalAddons['webLinks'] = new (await import("xterm-addon-web-links")).WebLinksAddon(webLinksHandler);
+    extraTerminalAddons['ligatures'] = new (await import("@xterm/addon-ligatures")).LigaturesAddon();
+    extraTerminalAddons['unicode'] = new (await import("@xterm/addon-unicode11")).Unicode11Addon();
+    extraTerminalAddons['webLinks'] = new (await import("@xterm/addon-web-links")).WebLinksAddon(webLinksHandler);
 })()
 
 async function initAddons(term: Terminal): Promise<void> {
@@ -69,7 +69,7 @@ async function initAddons(term: Terminal): Promise<void> {
         term.loadAddon(addon);
     }
 
-    const webglRenderer = new (await import("xterm-addon-webgl")).WebglAddon;
+    const webglRenderer = new (await import("@xterm/addon-webgl")).WebglAddon;
     try {
         term.loadAddon(webglRenderer);
         console.debug("Loaded webgl renderer");
@@ -79,7 +79,7 @@ async function initAddons(term: Terminal): Promise<void> {
     } catch (e) {
         console.warn(`Webgl renderer could not be loaded. Falling back to the canvas renderer type.`, e);
         webglRenderer.dispose();
-        const canvasRenderer = new (await import("xterm-addon-canvas")).CanvasAddon;
+        const canvasRenderer = new (await import("@xterm/addon-canvas")).CanvasAddon;
         term.loadAddon(canvasRenderer);
     }
 
@@ -133,7 +133,7 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         element.removeChild(element.children[0]);
     }
 
-    const { Terminal } = (await import("xterm"));
+    const { Terminal } = (await import("@xterm/xterm"));
 
     term = new Terminal({
         windowsMode: isWindows,

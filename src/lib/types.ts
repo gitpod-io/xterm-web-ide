@@ -1,10 +1,10 @@
-import { AttachAddon } from 'xterm-addon-attach';
-import { FitAddon } from 'xterm-addon-fit';
-import { WebLinksAddon } from 'xterm-addon-web-links';
-import { WebglAddon } from 'xterm-addon-webgl';
-import { Unicode11Addon } from 'xterm-addon-unicode11';
-import { LigaturesAddon } from 'xterm-addon-ligatures';
-import { Terminal } from 'xterm';
+import { AttachAddon } from '@xterm/addon-attach';
+import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
+import { WebglAddon } from '@xterm/addon-webgl';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
+import { LigaturesAddon } from '@xterm/addon-ligatures';
+import { Terminal } from '@xterm/xterm';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
 export type AddonType = "attach" | "fit" | "unicode11" | "web-links" | "webgl" | "ligatures";

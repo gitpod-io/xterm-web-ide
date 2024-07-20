@@ -11,7 +11,7 @@
  * @returns {() => void} - The debounced function.
  */
 export const debounce = (func: () => void, wait: number, trailing: boolean): () => void => {
-    let timeout: NodeJS.Timeout | null = null;
+    let timeout: number | null = null;
 
     return () => {
         const later = () => {
