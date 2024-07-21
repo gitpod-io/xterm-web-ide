@@ -2,7 +2,7 @@
 # Licensed under the GNU Affero General Public License (AGPL).
 # See License-AGPL.txt in the project root for license information.
 
-FROM node:16 as ide_installer
+FROM node:20 as ide_installer
 
 ARG XTERM_COMMIT
 

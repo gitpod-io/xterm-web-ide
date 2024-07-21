@@ -20,7 +20,7 @@ const config = {
 
 const rateLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 50,
+  limit: 50,
   message: "Too many requests from this IP, please try again after 1 minute",
   standardHeaders: true,
   legacyHeaders: false,
@@ -107,7 +107,6 @@ function startServer() {
   });
 
   app.post('/terminals/:pid/size', rateLimiter, (req, res) => {
-
     if (!req.query.cols || !req.query.rows) {
       res.statusCode = 400;
       res.send('`cols` and `rows` are required');

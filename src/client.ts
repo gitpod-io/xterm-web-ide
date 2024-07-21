@@ -4,10 +4,10 @@ import type { IDEFrontendState } from '@gitpod/gitpod-protocol/lib/ide-frontend-
 
 import type ReconnectingWebSocket from "reconnecting-websocket";
 import fetchBuilder from "fetch-retry";
-import type { Terminal, ITerminalOptions, ITerminalAddon } from "xterm";
+import type { Terminal, ITerminalOptions, ITerminalAddon } from "@xterm/xterm";
 
-import { AttachAddon } from "xterm-addon-attach";
-import { FitAddon } from "xterm-addon-fit";
+import { AttachAddon } from "@xterm/addon-attach";
+import { FitAddon } from "@xterm/addon-fit";
 
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IXtermWindow } from "./lib/types";
@@ -15,7 +15,8 @@ import { webLinksHandler } from "./lib/addons";
 import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
 import { Emitter } from '@gitpod/gitpod-protocol/lib/util/event';
 import { DisposableCollection } from '@gitpod/gitpod-protocol/lib/util/disposable';
-import { debounce, isWindows } from './lib/helpers';
+import { isWindows } from './lib/helpers';
+import debounce from "lodash/debounce"
 
 const onDidChangeState = new Emitter<void>();
 let state: IDEFrontendState = "initializing" as IDEFrontendState;
@@ -24,11 +25,11 @@ const maxReconnectionRetries = 50;
 
 const fetchOptions = {
     retries: maxReconnectionRetries,
-    retryDelay: (attempt: number, _error: Error, _response: Response) => {
+    retryDelay: (attempt: number, _error: Error | null, _response: Response | null) => {
         return Math.pow(1.25, attempt) * 200;
     },
-    retryOn: (attempt: number, error: Error, response: Response) => {
-        if (error !== null || response.status >= 400) {
+    retryOn: (attempt: number, error: Error | null, response: Response | null) => {
+        if (error !== null || (response?.status ?? 0) >= 400) {
             console.log(`retrying, attempt number ${attempt + 1}, ${(Math.pow(1.25, attempt) * 300) / 1000}`);
             return true;
         } else {
@@ -59,9 +60,9 @@ export const webSocketSettings: ReconnectingWebSocket['_options'] = {
 const extraTerminalAddons: { [key: string]: ITerminalAddon } = {};
 
 (async () => {
-    extraTerminalAddons['ligatures'] = new (await import("xterm-addon-ligatures")).LigaturesAddon();
-    extraTerminalAddons['unicode'] = new (await import("xterm-addon-unicode11")).Unicode11Addon();
-    extraTerminalAddons['webLinks'] = new (await import("xterm-addon-web-links")).WebLinksAddon(webLinksHandler);
+    extraTerminalAddons['ligatures'] = new (await import("@xterm/addon-ligatures")).LigaturesAddon();
+    extraTerminalAddons['unicode'] = new (await import("@xterm/addon-unicode11")).Unicode11Addon();
+    extraTerminalAddons['webLinks'] = new (await import("@xterm/addon-web-links")).WebLinksAddon(webLinksHandler);
 })()
 
 async function initAddons(term: Terminal): Promise<void> {
@@ -69,7 +70,7 @@ async function initAddons(term: Terminal): Promise<void> {
         term.loadAddon(addon);
     }
 
-    const webglRenderer = new (await import("xterm-addon-webgl")).WebglAddon;
+    const webglRenderer = new (await import("@xterm/addon-webgl")).WebglAddon;
     try {
         term.loadAddon(webglRenderer);
         console.debug("Loaded webgl renderer");
@@ -79,7 +80,7 @@ async function initAddons(term: Terminal): Promise<void> {
     } catch (e) {
         console.warn(`Webgl renderer could not be loaded. Falling back to the canvas renderer type.`, e);
         webglRenderer.dispose();
-        const canvasRenderer = new (await import("xterm-addon-canvas")).CanvasAddon;
+        const canvasRenderer = new (await import("@xterm/addon-canvas")).CanvasAddon;
         term.loadAddon(canvasRenderer);
     }
 
@@ -133,7 +134,7 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         element.removeChild(element.children[0]);
     }
 
-    const { Terminal } = (await import("xterm"));
+    const { Terminal } = (await import("@xterm/xterm"));
 
     term = new Terminal({
         windowsMode: isWindows,
@@ -191,7 +192,7 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         throw new Error("Couldn't set up a remote connection to the terminal process");
     }
 
-    const debouncedUpdateTerminalSize = debounce(() => updateTerminalSize(term), 200, true);
+    const debouncedUpdateTerminalSize = debounce(() => updateTerminalSize(term), 200, { trailing: true });
     window.onresize = () => debouncedUpdateTerminalSize();
 
     return { terminal: term, socket: terminalSocket };
