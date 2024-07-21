@@ -37,10 +37,10 @@
     "@xterm/addon-webgl": "^0.18.0",
     "@xterm/xterm": "^5.5.0",
     "buffer": "^6.0.3",
-    "express-rate-limit": "^6.7.0",
-    "fetch-retry": "^5.0.3",
+    "express-rate-limit": "^7.3.1",
+    "fetch-retry": "^6.0.0",
     "lodash": "^4.17.21",
-    "node": "16",
+    "node": "20",
     "reconnecting-websocket": "^4.4.0"
   },
   "devDependencies": {

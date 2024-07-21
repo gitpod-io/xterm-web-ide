@@ -20,7 +20,7 @@ const config = {
 
 const rateLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 50,
+  limit: 50,
   message: "Too many requests from this IP, please try again after 1 minute",
   standardHeaders: true,
   legacyHeaders: false,

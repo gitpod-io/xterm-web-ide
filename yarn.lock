@@ -2725,10 +2725,10 @@ etag@~1.8.1:
   resolved "https://registry.yarnpkg.com/etag/-/etag-1.8.1.tgz#41ae2eeb65efa62268aebfea83ac7d79299b0887"
   integrity sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==
 
-express-rate-limit@^6.7.0:
-  version "6.7.0"
-  resolved "https://registry.yarnpkg.com/express-rate-limit/-/express-rate-limit-6.7.0.tgz#6aa8a1bd63dfe79702267b3af1161a93afc1d3c2"
-  integrity sha512-vhwIdRoqcYB/72TK3tRZI+0ttS8Ytrk24GfmsxDXK9o9IhHNO5bXRiXQSExPQ4GbaE5tvIS7j1SGrxsuWs+sGA==
+express-rate-limit@^7.3.1:
+  version "7.3.1"
+  resolved "https://registry.yarnpkg.com/express-rate-limit/-/express-rate-limit-7.3.1.tgz#c0887ba746cdd358d17b8ab63d6eba1bae0f670b"
+  integrity sha512-BbaryvkY4wEgDqLgD18/NSy2lDO2jTuT9Y8c1Mpx0X63Yz0sYd5zN6KPe7UvpuSVvV33T6RaE1o1IVZQjHMYgw==
 
 express-ws@^5.0.2:
   version "5.0.2"
@@ -2844,10 +2844,10 @@ fastq@^1.6.0:
   dependencies:
     reusify "^1.0.4"
 
-fetch-retry@^5.0.3:
-  version "5.0.3"
-  resolved "https://registry.yarnpkg.com/fetch-retry/-/fetch-retry-5.0.3.tgz#edfa3641892995f9afee94f25b168827aa97fe3d"
-  integrity sha512-uJQyMrX5IJZkhoEUBQ3EjxkeiZkppBd5jS/fMTJmfZxLSiaQjv2zD0kTvuvkSH89uFvgSlB6ueGpjD3HWN7Bxw==
+fetch-retry@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/fetch-retry/-/fetch-retry-6.0.0.tgz#4ffdf92c834d72ae819e42a4ee2a63f1e9454426"
+  integrity sha512-BUFj1aMubgib37I3v4q78fYo63Po7t4HUPTpQ6/QE6yK6cIQrP+W43FYToeTEyg5m2Y7eFUtijUuAv/PDlWuag==
 
 filelist@^1.0.4:
   version "1.0.4"
@@ -3840,10 +3840,10 @@ node-releases@^2.0.14:
   resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.17.tgz#d74bc4fec38d839eec5db2a3c9c963d4f33cb366"
   integrity sha512-Ww6ZlOiEQfPfXM45v17oabk77Z7mg5bOt7AjDyzy7RjK9OrLrLC8dyZQoAPEOtFX9SaNf1Tdvr5gRJWdTJj7GA==
 
-node@16:
-  version "16.19.0"
-  resolved "https://registry.yarnpkg.com/node/-/node-16.19.0.tgz#7e9b96a37aeb5b18312a9f796d3c71583fa6035a"
-  integrity sha512-gVpwPuk8KZQjNYcuilyEcNLOAm97Q4GNvCrW5pZ9SiQH/shy/G4gInNzITEqF00lb6bjSzmYWCvGlomGkLm3/A==
+node@20:
+  version "20.15.1"
+  resolved "https://registry.yarnpkg.com/node/-/node-20.15.1.tgz#074040e2dc3518ef85ddafaf9c4b3b1f2e577ee8"
+  integrity sha512-/L1ipckYCdu4f8BvMX26HJHx5mSf7Q4Tu9zvgV5lpbMT+S2ojUGLU2uvB65zjiVZHUpf3uTxk5H9t6gDV0Tc3A==
   dependencies:
     node-bin-setup "^1.0.0"
 
