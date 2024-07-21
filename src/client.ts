@@ -25,11 +25,11 @@ const maxReconnectionRetries = 50;
 
 const fetchOptions = {
     retries: maxReconnectionRetries,
-    retryDelay: (attempt: number, _error: Error, _response: Response) => {
+    retryDelay: (attempt: number, _error: Error | null, _response: Response | null) => {
         return Math.pow(1.25, attempt) * 200;
     },
-    retryOn: (attempt: number, error: Error, response: Response) => {
-        if (error !== null || response.status >= 400) {
+    retryOn: (attempt: number, error: Error | null, response: Response | null) => {
+        if (error !== null || (response?.status ?? 0) >= 400) {
             console.log(`retrying, attempt number ${attempt + 1}, ${(Math.pow(1.25, attempt) * 300) / 1000}`);
             return true;
         } else {
