@@ -129,6 +129,13 @@ async function initiateRemoteTerminal(terminal: Terminal): Promise<void | Reconn
     return socket;
 }
 
+const reconnectButton = document.createElement("button");
+reconnectButton.innerText = "Reconnect";
+
+const reloadButton = document.createElement("button");
+reloadButton.innerText = "Reload page";
+reloadButton.onclick = () => location.reload();
+
 async function createTerminal(
     element: HTMLElement,
     toDispose: DisposableCollection,
@@ -197,16 +204,11 @@ async function createTerminal(
     const debouncedUpdateTerminalSize = debounce(() => updateTerminalSize(term), 200, { trailing: true });
     window.onresize = () => debouncedUpdateTerminalSize();
 
+    // Register the onclick event for the reconnect button
+    reconnectButton.onclick = () => terminalSocket.reconnect();
+
     return { terminal: term, socket: terminalSocket };
 }
-
-const reloadButton = document.createElement("button");
-reloadButton.innerText = "Reload page";
-reloadButton.onclick = () => location.reload();
-
-const reconnectButton = document.createElement("button");
-reconnectButton.innerText = "Reconnect";
-reconnectButton.onclick = () => window.socket?.reconnect();
 
 function handleDisconnected(e: CloseEvent | ErrorEvent, socket: ReconnectingWebSocket) {
     if (socket.retryCount < webSocketSettings.maxRetries) {
@@ -294,13 +296,19 @@ window.gitpod.ideService = {
         toDispose.push({
             dispose: () => {
                 state = "terminated";
-                window.socket?.close();
                 onDidChangeState.fire();
             },
         });
         const terminalContainer = document.getElementById("terminal-container");
         if (terminalContainer && !terminalContainer.classList.contains("init")) {
-            createTerminal(terminalContainer, toDispose).then(() => terminalContainer.classList.add("init"));
+            createTerminal(terminalContainer, toDispose).then(({ socket }) => {
+                terminalContainer.classList.add("init");
+                toDispose.push({
+                    dispose: () => {
+                        socket.close();
+                    },
+                });
+            });
         }
         return toDispose;
     },

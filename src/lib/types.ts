@@ -5,13 +5,11 @@ import { WebglAddon } from "@xterm/addon-webgl";
 import { Unicode11Addon } from "@xterm/addon-unicode11";
 import { LigaturesAddon } from "@xterm/addon-ligatures";
 import { Terminal } from "@xterm/xterm";
-import ReconnectingWebSocket from "reconnecting-websocket";
 
 export type AddonType = "attach" | "fit" | "unicode11" | "web-links" | "webgl" | "ligatures";
 
 export interface IXtermWindow extends Window {
     terminal: Terminal | undefined;
-    socket: ReconnectingWebSocket;
     handledMessages: string[];
 }
 
