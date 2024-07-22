@@ -1,31 +1,27 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gitpod</title>
-    <link rel="stylesheet" href="assets/styles.scss" />
-    <!-- Gitpod specific -->
-		<meta id="gitpod-ide-capabilities" data-settings="{&quot;service&quot;:true}">
-  </head>
-  <body>
-    <main id="terminal-container"></main>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Gitpod</title>
+        <link rel="stylesheet" href="assets/styles.scss" />
+        <!-- Gitpod specific -->
+        <meta id="gitpod-ide-capabilities" data-settings='{"service":true}' />
+    </head>
+    <body>
+        <main id="terminal-container"></main>
 
-    <dialog id="output">
-      <p id="outputContent"></p>
-      <form method="dialog">
-          <button value="cancel">Cancel</button>
-      </form>
-    </dialog>
-    <script
-      type="text/javascript"
-      src="/_supervisor/frontend/main.js"
-      charset="utf-8"
-    ></script>
-    <script type="module">
-      import { Buffer } from "buffer";
-      window.Buffer = Buffer;
-    </script>
-    <script src="src/client.ts" type="module" defer></script>
-  </body>
+        <dialog id="output">
+            <p id="outputContent"></p>
+            <form method="dialog">
+                <button value="cancel">Cancel</button>
+            </form>
+        </dialog>
+        <script type="text/javascript" src="/_supervisor/frontend/main.js" charset="utf-8"></script>
+        <script type="module">
+            import { Buffer } from "buffer";
+            window.Buffer = Buffer;
+        </script>
+        <script src="src/client.ts" type="module" defer></script>
+    </body>
 </html>

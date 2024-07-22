@@ -23,7 +23,7 @@ h1 {
 
 p {
     font-size: 0.9em;
-    font-style: italic
+    font-style: italic;
 }
 
 #option-container {
@@ -47,7 +47,6 @@ pre {
     word-wrap: break-word;
     white-space: pre-wrap;
 }
-
 
 #container {
     display: flex;
@@ -86,7 +85,7 @@ pre {
 /* Create an active/current tablink class */
 .tab button.active {
     background-color: #ccc;
-  }
+}
 
 /* Style the tab content */
 .tabContent {
@@ -108,10 +107,10 @@ pre {
 #terminal-container {
     min-width: 100vw;
     min-height: 100vh;
-    background:black;
-    position:absolute;
-    top:0px;
-    right:0px;
-    bottom:0px;
-    left:0px;
+    background: black;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
 }

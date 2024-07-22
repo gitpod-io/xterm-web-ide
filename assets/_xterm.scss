@@ -35,7 +35,7 @@
  *  Default styles for xterm.js
  */
 
- .xterm {
+.xterm {
     cursor: text;
     position: relative;
     user-select: none;
@@ -79,7 +79,7 @@
 .xterm .composition-view {
     /* TODO: Composition position got messed up somewhere */
     background: #000;
-    color: #FFF;
+    color: #fff;
     display: none;
     position: absolute;
     white-space: nowrap;
@@ -172,8 +172,8 @@
 }
 
 .xterm-screen .xterm-decoration-container .xterm-decoration {
-	z-index: 6;
-	position: absolute;
+    z-index: 6;
+    position: absolute;
 }
 
 .xterm-decoration-overview-ruler {

@@ -16,11 +16,15 @@ export const resizeRemoteTerminal = async (size: { cols: number; rows: number },
     } catch (e) {
         console.error(`Failed to resize the remote shell: ${e}`);
     }
-}
+};
 
 export const initiateRemoteCommunicationChannelSocket = async (protocol: string) => {
     const ReconnectingWebSocket = (await import("reconnecting-websocket")).default;
-    const socket = new ReconnectingWebSocket(`${protocol + location.hostname + (location.port ? ":" + location.port : "")}/terminals/remote-communication-channel/`, [], webSocketSettings);
+    const socket = new ReconnectingWebSocket(
+        `${protocol + location.hostname + (location.port ? ":" + location.port : "")}/terminals/remote-communication-channel/`,
+        [],
+        webSocketSettings,
+    );
 
     socket.onopen = () => {
         console.debug("External messaging channel socket opened");

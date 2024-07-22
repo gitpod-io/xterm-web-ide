@@ -14,6 +14,7 @@ This repository contains a web-based IDE built entirely on top of [xterm.js](htt
 </figure>
 
 ## Running the IDE
+
 1. Clone this repository
 2. Install dependencies
     ```bash

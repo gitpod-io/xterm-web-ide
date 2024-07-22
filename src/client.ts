@@ -1,6 +1,6 @@
 /// <reference types='@gitpod/gitpod-protocol/lib/typings/globals'/>
 
-import type { IDEFrontendState } from '@gitpod/gitpod-protocol/lib/ide-frontend-service';
+import type { IDEFrontendState } from "@gitpod/gitpod-protocol/lib/ide-frontend-service";
 
 import type ReconnectingWebSocket from "reconnecting-websocket";
 import fetchBuilder from "fetch-retry";
@@ -12,11 +12,12 @@ import { FitAddon } from "@xterm/addon-fit";
 import { resizeRemoteTerminal } from "./lib/remote";
 import { IXtermWindow } from "./lib/types";
 import { webLinksHandler } from "./lib/addons";
+import { isWindows } from "./lib/helpers";
 import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
-import { Emitter } from '@gitpod/gitpod-protocol/lib/util/event';
-import { DisposableCollection } from '@gitpod/gitpod-protocol/lib/util/disposable';
-import { isWindows } from './lib/helpers';
-import debounce from "lodash/debounce"
+
+import { Emitter } from "@gitpod/gitpod-protocol/lib/util/event";
+import { DisposableCollection } from "@gitpod/gitpod-protocol/lib/util/disposable";
+import debounce from "lodash/debounce";
 
 const onDidChangeState = new Emitter<void>();
 let state: IDEFrontendState = "initializing" as IDEFrontendState;
@@ -33,11 +34,11 @@ const fetchOptions = {
             console.log(`retrying, attempt number ${attempt + 1}, ${(Math.pow(1.25, attempt) * 300) / 1000}`);
             return true;
         } else {
-            console.warn("Not retrying")
+            console.warn("Not retrying");
             return false;
         }
-    }
-}
+    },
+};
 
 declare let window: IXtermWindow;
 
@@ -49,28 +50,29 @@ window.handledMessages = [];
 
 const defaultFonts = ["JetBrains Mono", "Fira Code", "courier-new", "courier", "monospace"];
 
-export const webSocketSettings: ReconnectingWebSocket['_options'] = {
+export const webSocketSettings: ReconnectingWebSocket["_options"] = {
     connectionTimeout: 5000,
     maxReconnectionDelay: 7000,
     minReconnectionDelay: 500,
     maxRetries: maxReconnectionRetries,
     debug: false,
-}
+};
 
 const extraTerminalAddons: { [key: string]: ITerminalAddon } = {};
 
 (async () => {
-    extraTerminalAddons['ligatures'] = new (await import("@xterm/addon-ligatures")).LigaturesAddon();
-    extraTerminalAddons['unicode'] = new (await import("@xterm/addon-unicode11")).Unicode11Addon();
-    extraTerminalAddons['webLinks'] = new (await import("@xterm/addon-web-links")).WebLinksAddon(webLinksHandler);
-})()
+    extraTerminalAddons["ligatures"] = new (await import("@xterm/addon-ligatures")).LigaturesAddon();
+    extraTerminalAddons["unicode"] = new (await import("@xterm/addon-unicode11")).Unicode11Addon();
+    extraTerminalAddons["webLinks"] = new (await import("@xterm/addon-web-links")).WebLinksAddon(webLinksHandler);
+})();
 
 async function initAddons(term: Terminal): Promise<void> {
     for (const addon of Object.values(extraTerminalAddons)) {
         term.loadAddon(addon);
     }
 
-    const webglRenderer = new (await import("@xterm/addon-webgl")).WebglAddon;
+    const webglRenderer = new (await import("@xterm/addon-webgl")).WebglAddon();
+
     try {
         term.loadAddon(webglRenderer);
         console.debug("Loaded webgl renderer");
@@ -80,11 +82,12 @@ async function initAddons(term: Terminal): Promise<void> {
     } catch (e) {
         console.warn(`Webgl renderer could not be loaded. Falling back to the canvas renderer type.`, e);
         webglRenderer.dispose();
-        const canvasRenderer = new (await import("@xterm/addon-canvas")).CanvasAddon;
+
+        const canvasRenderer = new (await import("@xterm/addon-canvas")).CanvasAddon();
         term.loadAddon(canvasRenderer);
     }
 
-    term.unicode.activeVersion = '11';
+    term.unicode.activeVersion = "11";
 }
 
 async function initiateRemoteTerminal(terminal: Terminal): Promise<void | ReconnectingWebSocket> {
@@ -120,26 +123,27 @@ async function initiateRemoteTerminal(terminal: Terminal): Promise<void | Reconn
 
         await runRealTerminal(term, socket as WebSocket);
     };
-    //@ts-ignore
-    socket.onclose = handleDisconnected;
-    //@ts-ignore
-    socket.onerror = handleDisconnected;
+    socket.onclose = (error) => handleDisconnected(error as CloseEvent, socket);
+    socket.onerror = (error) => handleDisconnected(error as ErrorEvent, socket);
 
     return socket;
 }
 
-async function createTerminal(element: HTMLElement, toDispose: DisposableCollection): Promise<{ terminal: Terminal; socket: ReconnectingWebSocket }> {
+async function createTerminal(
+    element: HTMLElement,
+    toDispose: DisposableCollection,
+): Promise<{ terminal: Terminal; socket: ReconnectingWebSocket }> {
     // Clean terminal
     while (element.children.length) {
         element.removeChild(element.children[0]);
     }
 
-    const { Terminal } = (await import("@xterm/xterm"));
+    const { Terminal } = await import("@xterm/xterm");
 
     term = new Terminal({
         windowsMode: isWindows,
         fontFamily: defaultFonts.join(", "),
-        allowProposedApi: true
+        allowProposedApi: true,
     } as ITerminalOptions);
 
     term.attachCustomKeyEventHandler((event) => {
@@ -162,10 +166,10 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
         }
     });
 
-    const unwantedSequence = '\x1b[0;276;0c';
+    const unwantedSequence = "\x1b[0;276;0c";
     term.onData((data) => {
         if (data.includes(unwantedSequence)) {
-            const cleanedData = data.replaceAll(unwantedSequence, '');
+            const cleanedData = data.replaceAll(unwantedSequence, "");
             term.write(cleanedData);
         }
     });
@@ -179,15 +183,13 @@ async function createTerminal(element: HTMLElement, toDispose: DisposableCollect
     });
 
     protocol = location.protocol === "https:" ? "wss://" : "ws://";
-    socketURL = `${protocol + location.hostname + (location.port ? ":" + location.port : "")
-        }/terminals/`;
+    socketURL = `${protocol + location.hostname + (location.port ? ":" + location.port : "")}/terminals/`;
 
     term.open(element);
     updateTerminalSize(term);
     term.focus();
 
     const terminalSocket = await initiateRemoteTerminal(term);
-
     if (!terminalSocket) {
         throw new Error("Couldn't set up a remote connection to the terminal process");
     }
@@ -204,48 +206,47 @@ reloadButton.onclick = () => location.reload();
 
 const reconnectButton = document.createElement("button");
 reconnectButton.innerText = "Reconnect";
-reconnectButton.onclick = () => window.socket.reconnect();
+reconnectButton.onclick = () => window.socket?.reconnect();
 
-function handleDisconnected(e: CloseEvent) {
-
-    if (window.socket.retryCount < webSocketSettings.maxRetries) {
-        console.info("Tried to reconnect WS")
+function handleDisconnected(e: CloseEvent | ErrorEvent, socket: ReconnectingWebSocket) {
+    if (socket.retryCount < webSocketSettings.maxRetries) {
+        console.info("Tried to reconnect WS, proceeding");
         return;
     }
 
-    switch (e.code) {
-        case 1000:
-            if (e.reason === "timeout") {
-                location.reload();
-            }
-        case 1001:
-            // This error happens every page reload, ignore
-            break;
-        case 1005:
-            output("For some reason the WebSocket closed. Reload?", {
-                formActions: [reconnectButton, reloadButton],
-            });
-        case 1006:
-            if (navigator.onLine) {
-                output("Cannot reach workspace, consider reloading", {
-                    formActions: [reloadButton],
+    if (e instanceof CloseEvent) {
+        switch (e.code) {
+            case 1000:
+                if (e.reason === "timeout") {
+                    location.reload();
+                }
+            case 1001:
+                // This error happens every page reload, ignore
+                break;
+            case 1005:
+                output("For some reason the WebSocket closed. Reload?", {
+                    formActions: [reconnectButton, reloadButton],
                 });
-            } else {
-                output(
-                    "You are offline, please connect to the internet and refresh this page"
-                );
-            }
-            break;
+            case 1006:
+                if (navigator.onLine) {
+                    output("Cannot reach workspace, consider reloading", {
+                        formActions: [reloadButton],
+                    });
+                } else {
+                    output("You are offline, please connect to the internet and refresh this page");
+                }
+                break;
+            default:
+                console.error(`Unhandled error event`, e);
+        }
     }
+
     console.error(e);
 }
 
 const outputDialog = document.getElementById("output") as HTMLDialogElement;
 const outputContent = document.getElementById("outputContent")!;
-function output(
-    message: string,
-    options?: { formActions: HTMLInputElement[] | HTMLButtonElement[] }
-) {
+function output(message: string, options?: { formActions: HTMLInputElement[] | HTMLButtonElement[] }) {
     if (typeof outputDialog.showModal === "function") {
         outputContent.innerText = message;
         if (options?.formActions) {
@@ -293,13 +294,14 @@ window.gitpod.ideService = {
         toDispose.push({
             dispose: () => {
                 state = "terminated";
+                window.socket?.close();
                 onDidChangeState.fire();
-            }
-        })
+            },
+        });
         const terminalContainer = document.getElementById("terminal-container");
         if (terminalContainer && !terminalContainer.classList.contains("init")) {
             createTerminal(terminalContainer, toDispose).then(() => terminalContainer.classList.add("init"));
         }
         return toDispose;
-    }
+    },
 };
