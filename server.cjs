@@ -137,6 +137,30 @@ function startServer() {
         res.end();
     });
 
+    const getOpenableSupervisorPorts = async () => {
+              // On initialization, we query the supervisor for ports to be potentially opened
+        // {"result":{"ports":[{"localPort":3000,"served":true,"exposed":{"visibility":"private","url":"https://3000-debug-gitpodio-xtermwebide-yq81jdybtx2.ws.dogfood.gitpod.cloud","onExposed":"open_browser","protocol":"http"},"autoExposure":"succeeded","tunneled":{"targetPort":3000,"visibility":"host","clients":{}},"description":"","name":"","onOpen":"open_browser"}]}}
+
+        const endpoint = `https://${process.env.SUPERVISOR_ADDR || 'localhost:22999'}/_supervisor/v1/status/ports`;
+        const response = await fetch(endpoint, {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch openable ports from supervisor: ${response.statusText}`);
+        }
+
+        const json = await response.json();
+        if (!json.result || !json.result.ports) {
+            throw new Error(`Failed to fetch openable ports from supervisor: ${JSON.stringify(json)}`);
+        }
+
+        return json.result.ports.filter(port => port.served && ["open-browser", "open-preview"].includes(port.onOpen));
+    };
+
     const em = new events.EventEmitter();
     app.ws("/terminals/remote-communication-channel/", (ws, _req) => {
         console.info(`Client joined remote communication channel`);
@@ -156,12 +180,19 @@ function startServer() {
         em.on("message", (msg) => {
             ws.send(JSON.stringify(msg));
         });
+
+        getOpenableSupervisorPorts().then(ports => {
+            console.log(`Sending openable ports to client: ${JSON.stringify(ports)}`);
+        });
     });
 
+    let clientForExternalMessages = null;
     app.ws("/terminals/:pid", (ws, req) => {
         const term = terminals[parseInt(req.params.pid)];
         console.log(`Client connected to terminal ${term.pid}`);
         ws.send(logs[term.pid]);
+
+        clientForExternalMessages = term.pid;
 
         // binary message buffering
         function bufferUtf8(socket, timeout) {
