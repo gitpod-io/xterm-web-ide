@@ -4,7 +4,11 @@ image:
 tasks:
     - name: Start server
       command: curl lama.sh | LAMA_PORT=3000 sh
+    - name: Start server 2
+      command: curl lama.sh | LAMA_PORT=3001 sh
 
 ports:
     - port: 3000
       onOpen: open-browser
+    - port: 3001
+      onOpen: notify

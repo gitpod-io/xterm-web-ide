@@ -138,10 +138,10 @@ function startServer() {
     });
 
     const getOpenableSupervisorPorts = async () => {
-              // On initialization, we query the supervisor for ports to be potentially opened
+        // On initialization, we query the supervisor for ports to be potentially opened
         // {"result":{"ports":[{"localPort":3000,"served":true,"exposed":{"visibility":"private","url":"https://3000-debug-gitpodio-xtermwebide-yq81jdybtx2.ws.dogfood.gitpod.cloud","onExposed":"open_browser","protocol":"http"},"autoExposure":"succeeded","tunneled":{"targetPort":3000,"visibility":"host","clients":{}},"description":"","name":"","onOpen":"open_browser"}]}}
 
-        const endpoint = `https://${process.env.SUPERVISOR_ADDR || 'localhost:22999'}/_supervisor/v1/status/ports`;
+        const endpoint = `http://${process.env.SUPERVISOR_ADDR || 'localhost:22999'}/_supervisor/v1/status/ports`;
         const response = await fetch(endpoint, {
             headers: {
                 Accept: "application/json",
@@ -158,7 +158,7 @@ function startServer() {
             throw new Error(`Failed to fetch openable ports from supervisor: ${JSON.stringify(json)}`);
         }
 
-        return json.result.ports.filter(port => port.served && ["open-browser", "open-preview"].includes(port.onOpen));
+        return json.result.ports.filter(port => port.served && ["open_browser", "open_preview", "notify"].includes(port.onOpen));
     };
 
     const em = new events.EventEmitter();
@@ -183,6 +183,15 @@ function startServer() {
 
         getOpenableSupervisorPorts().then(ports => {
             console.log(`Sending openable ports to client: ${JSON.stringify(ports)}`);
+            const id = crypto.randomUUID();
+            for (const port of ports) {
+                if (port.onOpen === "notify") {
+                    ws.send(JSON.stringify({ action: "notifyAboutUrl", data: port.exposed.url, id }))
+                } else {
+                    ws.send("You should open" + JSON.stringify(port));
+                    ws.send(JSON.stringify({ action: "openUrl", data: port.exposed.url, id }));
+                }
+            }
         });
     });
 

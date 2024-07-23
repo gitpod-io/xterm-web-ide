@@ -248,7 +248,7 @@ function handleDisconnected(e: CloseEvent | ErrorEvent, socket: ReconnectingWebS
 
 const outputDialog = document.getElementById("output") as HTMLDialogElement;
 const outputContent = document.getElementById("outputContent")!;
-function output(message: string, options?: { formActions: HTMLInputElement[] | HTMLButtonElement[] }) {
+export function output(message: string, options?: { formActions: HTMLInputElement[] | HTMLButtonElement[] }) {
     if (typeof outputDialog.showModal === "function") {
         outputContent.innerText = message;
         if (options?.formActions) {

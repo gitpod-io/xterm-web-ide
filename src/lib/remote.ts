@@ -1,4 +1,4 @@
-import { webSocketSettings } from "../client";
+import { output, webSocketSettings } from "../client";
 import { IXtermWindow } from "./types";
 
 declare let window: IXtermWindow;
@@ -42,10 +42,20 @@ export const initiateRemoteCommunicationChannelSocket = async (protocol: string)
             return;
         }
 
-        if (messageData.action === "openUrl") {
-            const url = messageData.data;
-            console.debug(`Opening URL: ${url}`);
-            window.open(url, "_blank");
+        switch (messageData.action) {
+            case "openUrl": {
+                const url = messageData.data;
+                console.debug(`Opening URL: ${url}`);
+                window.open(url, "_blank");
+                break;
+            }
+            case "notifyAboutUrl": {
+                const url = messageData.data;
+                output(url);
+                break
+            }
+            default:
+                console.debug("Unhandled message", messageData)
         }
 
         window.handledMessages.push(messageData.id);
