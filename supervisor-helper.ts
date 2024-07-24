@@ -14,13 +14,7 @@ export function isGRPCErrorStatus<T extends grpc.status>(err: any, status: T): b
 	return err && typeof err === 'object' && 'code' in err && err.code === status;
 }
 
-// Important:
-// This class should performs all supervisor API calls used outside this module.
-// This is a requirement because mixing Request Objects created in gitpod-web or gitpod-remote with
-// the corresponding service client will cause a runtime error as type checking is done with the
-// `instanceof` operator and they are different modules loaded from different locations
-// E.g.: `Request message serialization failure: Expected argument of type supervisor.PortsStatusRequest`
-// https://penx.medium.com/managing-dependencies-in-a-node-package-so-that-they-are-compatible-with-npm-link-61befa5aaca7
+// Adapted from https://github.com/gitpod-io/gitpod-code/blob/master/gitpod-shared/src/gitpodContext.ts#L38
 export class SupervisorConnection {
 	static readonly deadlines = {
 		long: 30 * 1000,
@@ -35,7 +29,7 @@ export class SupervisorConnection {
 	private readonly info: InfoServiceClient;
 	readonly terminal: TerminalServiceClient;
 
-    readonly onDidChangePortStatus = new EventEmitter();
+	readonly onDidChangePortStatus = new EventEmitter();
 
 	constructor(
 		private context: DisposableCollection,
@@ -49,8 +43,8 @@ export class SupervisorConnection {
 		this.terminal = new TerminalServiceClient(this.addr, grpc.credentials.createInsecure(), this.clientOptions);
 
 		this.context.push(Disposable.create(() => {
-            this.onDidChangePortStatus.removeAllListeners();
-        }));
+			this.onDidChangePortStatus.removeAllListeners();
+		}));
 	}
 
 	private _startObservePortsStatus = false;
@@ -74,7 +68,7 @@ export class SupervisorConnection {
 						evts.on('end', resolve);
 						evts.on('error', reject);
 						evts.on('data', (update: PortsStatusResponse) => {
-                            const data = update.getPortsList().map(p => p.toObject());
+							const data = update.getPortsList().map(p => p.toObject());
 							this.onDidChangePortStatus.emit("update", data);
 						});
 					});
@@ -112,11 +106,36 @@ export type GitpodConnection = Omit<GitpodServiceImpl<GitpodClient, GitpodServer
 	server: Pick<GitpodServer, Union<UsedGitpodFunction>>;
 };
 
+export async function* getOpenablePorts(): AsyncGenerator<PortsStatus.AsObject[], void, void> {
+	const supervisor = new SupervisorConnection(new DisposableCollection());
+	supervisor.startObservePortsStatus();
 
-const supervisor = new SupervisorConnection(new DisposableCollection());
-// supervisor.startObservePortsStatus();
-console.log("Supervisor connection started");
-console.log(await supervisor.getWorkspaceInfo());
-supervisor.onDidChangePortStatus.on("update", (ports) => {
-    console.log("Ports updated", ports);
-});
+	const internalEventEmitter = new EventEmitter();
+	supervisor.onDidChangePortStatus.on("update", (ports: PortsStatus.AsObject[]) => {
+		internalEventEmitter.emit("portsUpdated", ports);
+	});
+
+	while (true) {
+		const ports = await new Promise<PortsStatus.AsObject[]>(resolve => {
+			internalEventEmitter.once("portsUpdated", resolve);
+		});
+		const filtered = ports.filter(port => {
+			if (!port.served) {
+				return false;
+			}
+
+			switch (port.onOpen) {
+				case PortsStatus.OnOpenAction.NOTIFY_PRIVATE:
+				case PortsStatus.OnOpenAction.IGNORE:
+					return false;
+				case PortsStatus.OnOpenAction.OPEN_BROWSER:
+				case PortsStatus.OnOpenAction.OPEN_PREVIEW:
+				case PortsStatus.OnOpenAction.NOTIFY:
+				default:
+					return true;
+			}
+		});
+
+		yield filtered;
+	}
+}

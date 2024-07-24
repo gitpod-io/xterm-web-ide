@@ -10,7 +10,7 @@
     "format": "prettier -w . --experimental-ternaries",
     "start": "yarn package && node dist/index.cjs",
     "package:client": "rimraf out/ && yarn build && mkdir -p out/ && cp -r index.html dist/ assets/ out/",
-    "package:server": "ncc build -m server.cjs -o dist/ --target es2022 --source-map",
+    "package:server": "tsc --module commonjs supervisor-helper.ts --outdir out --esmoduleinterop true --declaration && mv out/supervisor-helper.js out/supervisor-helper.cjs && ncc build -m server.cjs -o dist/ --target es2022 --source-map",
     "inject-commit": "git rev-parse HEAD > dist/commit.txt",
     "package": "yarn build && yarn package:server && yarn inject-commit"
   },
