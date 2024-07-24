@@ -10,7 +10,7 @@ const rateLimit = require("express-rate-limit").default;
 const WebSocket = require("ws");
 const argv = require("minimist")(process.argv.slice(2), { boolean: ["openExternal"] });
 
-const {getOpenablePorts} = require("./out/supervisor-helper.cjs");
+const { getOpenablePorts } = require("./out/supervisor-helper.cjs");
 const { PortsStatus } = require("@gitpod/supervisor-api-grpc/lib/status_pb");
 const { default: EventEmitter } = require("events");
 

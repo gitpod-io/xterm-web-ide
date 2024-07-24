@@ -254,11 +254,14 @@ function handleDisconnected(e: CloseEvent | ErrorEvent, socket: ReconnectingWebS
 type OutputReason = "info" | "error";
 
 const outputStack = new Set<UUID>();
-export const output = (message: string, options?: { formActions?: (HTMLInputElement | HTMLButtonElement)[]; reason?: OutputReason }): UUID => {
+export const output = (
+    message: string,
+    options?: { formActions?: (HTMLInputElement | HTMLButtonElement)[]; reason?: OutputReason },
+): UUID => {
     const outputId = crypto.randomUUID();
     const dialogElement = document.createElement("dialog");
     dialogElement.id = outputId;
-    
+
     const outputContent = document.createElement("p");
     outputContent.innerText = message;
     dialogElement.appendChild(outputContent);
@@ -298,7 +301,7 @@ export const closeModal = (id: UUID) => {
     dialogElement.close();
     dialogElement.remove();
     outputStack.delete(id);
-}
+};
 
 let attachAddon: AttachAddon;
 
