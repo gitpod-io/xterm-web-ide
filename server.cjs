@@ -3,7 +3,6 @@
 const express = require("express");
 const expressWs = require("express-ws");
 const pty = require("node-pty");
-const events = require("events");
 const crypto = require("crypto");
 
 const rateLimit = require("express-rate-limit").default;
@@ -13,6 +12,7 @@ const argv = require("minimist")(process.argv.slice(2), { boolean: ["openExterna
 
 const {getOpenablePorts} = require("./out/supervisor-helper.cjs");
 const { PortsStatus } = require("@gitpod/supervisor-api-grpc/lib/status_pb");
+const { default: EventEmitter } = require("events");
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 23000;
 const host = "0.0.0.0";
@@ -140,33 +140,7 @@ function startServer() {
         res.end();
     });
 
-    const getOpenableSupervisorPorts = async () => {
-        // On initialization, we query the supervisor for ports to be potentially opened
-        // {"result":{"ports":[{"localPort":3000,"served":true,"exposed":{"visibility":"private","url":"https://3000-debug-gitpodio-xtermwebide-yq81jdybtx2.ws.dogfood.gitpod.cloud","onExposed":"open_browser","protocol":"http"},"autoExposure":"succeeded","tunneled":{"targetPort":3000,"visibility":"host","clients":{}},"description":"","name":"","onOpen":"open_browser"}]}}
-
-        const endpoint = `http://${process.env.SUPERVISOR_ADDR || "localhost:22999"}/_supervisor/v1/status/ports`;
-        const response = await fetch(endpoint, {
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch openable ports from supervisor: ${response.statusText}`);
-        }
-
-        const json = await response.json();
-        if (!json.result || !json.result.ports) {
-            throw new Error(`Failed to fetch openable ports from supervisor: ${JSON.stringify(json)}`);
-        }
-
-        return json.result.ports.filter(
-            (port) => port.served && ["open_browser", "open_preview", "notify"].includes(port.onOpen),
-        );
-    };
-
-    const em = new events.EventEmitter();
+    const em = new EventEmitter();
     app.ws("/terminals/remote-communication-channel/", (ws, _req) => {
         console.info(`Client joined remote communication channel`);
 
