@@ -50,12 +50,20 @@ export const initiateRemoteCommunicationChannelSocket = async (protocol: string)
                 break;
             }
             case "notifyAboutUrl": {
-                const url = messageData.data;
-                output(url);
-                break
+                const { url, port } = messageData.data;
+
+                const openUrlButton = document.createElement("button");
+                openUrlButton.innerText = "Open URL";
+                openUrlButton.type = "button";
+                openUrlButton.onclick = () => {
+                    window.open(url, "_blank");
+                };
+
+                output(`Port ${port} has been opened`, { formActions: [openUrlButton], reason: "info" });
+                break;
             }
             default:
-                console.debug("Unhandled message", messageData)
+                console.debug("Unhandled message", messageData);
         }
 
         window.handledMessages.push(messageData.id);

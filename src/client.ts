@@ -104,6 +104,7 @@ async function initiateRemoteTerminal(terminal: Terminal): Promise<void | Reconn
     if (!initialTerminalResizeRequest.ok) {
         output("Could not setup IDE. Retry?", {
             formActions: [reloadButton],
+            reason: "error",
         });
         return;
     }
@@ -118,7 +119,9 @@ async function initiateRemoteTerminal(terminal: Terminal): Promise<void | Reconn
 
     const socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
     socket.onopen = async () => {
-        outputDialog.close();
+        if (outputReasonInput.value === "error") {
+            outputDialog.close();
+        }
         (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
 
         await runRealTerminal(term, socket as WebSocket);
@@ -228,14 +231,18 @@ function handleDisconnected(e: CloseEvent | ErrorEvent, socket: ReconnectingWebS
             case 1005:
                 output("For some reason the WebSocket closed. Reload?", {
                     formActions: [reconnectButton, reloadButton],
+                    reason: "error",
                 });
             case 1006:
                 if (navigator.onLine) {
                     output("Cannot reach workspace, consider reloading", {
                         formActions: [reloadButton],
+                        reason: "error",
                     });
                 } else {
-                    output("You are offline, please connect to the internet and refresh this page");
+                    output("You are offline, please connect to the internet and refresh this page", {
+                        reason: "error",
+                    });
                 }
                 break;
             default:
@@ -246,9 +253,15 @@ function handleDisconnected(e: CloseEvent | ErrorEvent, socket: ReconnectingWebS
     console.error(e);
 }
 
+type OutputReason = "info" | "error";
+
 const outputDialog = document.getElementById("output") as HTMLDialogElement;
 const outputContent = document.getElementById("outputContent")!;
-export function output(message: string, options?: { formActions: HTMLInputElement[] | HTMLButtonElement[] }) {
+const outputReasonInput = document.getElementById("outputReason") as HTMLInputElement;
+export function output(
+    message: string,
+    options?: { formActions?: HTMLInputElement[] | HTMLButtonElement[]; reason?: OutputReason },
+) {
     if (typeof outputDialog.showModal === "function") {
         outputContent.innerText = message;
         if (options?.formActions) {
@@ -256,7 +269,10 @@ export function output(message: string, options?: { formActions: HTMLInputElemen
                 outputDialog.querySelector("form")!.appendChild(action);
             }
         }
+        outputReasonInput.value = options?.reason ?? "info";
         outputDialog.showModal();
+    } else {
+        console.error("Could not output, user agent does not support the dialog API.");
     }
 }
 
