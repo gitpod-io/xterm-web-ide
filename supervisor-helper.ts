@@ -1,14 +1,8 @@
-import { GitpodClient, GitpodServer, GitpodServiceImpl } from "@gitpod/gitpod-protocol/lib/gitpod-service";
 import { Disposable, DisposableCollection } from "@gitpod/gitpod-protocol/lib/util/disposable";
-import { InfoServiceClient } from "@gitpod/supervisor-api-grpc/lib/info_grpc_pb";
-import { WorkspaceInfoRequest } from "@gitpod/supervisor-api-grpc/lib/info_pb";
-import { NotificationServiceClient } from "@gitpod/supervisor-api-grpc/lib/notification_grpc_pb";
 import { StatusServiceClient } from "@gitpod/supervisor-api-grpc/lib/status_grpc_pb";
 import { PortsStatus, PortsStatusRequest, PortsStatusResponse } from "@gitpod/supervisor-api-grpc/lib/status_pb";
-import { TerminalServiceClient } from "@gitpod/supervisor-api-grpc/lib/terminal_grpc_pb";
 import * as grpc from "@grpc/grpc-js";
 import EventEmitter from "node:events";
-import * as util from "util";
 
 export function isGRPCErrorStatus<T extends grpc.status>(err: any, status: T): boolean {
     return err && typeof err === "object" && "code" in err && err.code === status;
@@ -25,9 +19,6 @@ export class SupervisorConnection {
     private readonly clientOptions: Partial<grpc.ClientOptions>;
     readonly metadata = new grpc.Metadata();
     readonly status: StatusServiceClient;
-    readonly notification: NotificationServiceClient;
-    private readonly info: InfoServiceClient;
-    readonly terminal: TerminalServiceClient;
 
     readonly onDidChangePortStatus = new EventEmitter();
 
@@ -36,13 +27,6 @@ export class SupervisorConnection {
             "grpc.primary_user_agent": `xtermIDE/v1.0.0`,
         };
         this.status = new StatusServiceClient(this.addr, grpc.credentials.createInsecure(), this.clientOptions);
-        this.notification = new NotificationServiceClient(
-            this.addr,
-            grpc.credentials.createInsecure(),
-            this.clientOptions,
-        );
-        this.info = new InfoServiceClient(this.addr, grpc.credentials.createInsecure(), this.clientOptions);
-        this.terminal = new TerminalServiceClient(this.addr, grpc.credentials.createInsecure(), this.clientOptions);
 
         this.context.push(
             Disposable.create(() => {
@@ -95,35 +79,7 @@ export class SupervisorConnection {
             },
         });
     }
-
-    async getWorkspaceInfo() {
-        const response = await util.promisify(
-            this.info.workspaceInfo.bind(this.info, new WorkspaceInfoRequest(), this.metadata, {
-                deadline: Date.now() + SupervisorConnection.deadlines.long,
-            }),
-        )();
-        return response.toObject();
-    }
 }
-
-type UsedGitpodFunction = [
-    "getWorkspace",
-    "openPort",
-    "stopWorkspace",
-    "setWorkspaceTimeout",
-    "getWorkspaceTimeout",
-    "getLoggedInUser",
-    "takeSnapshot",
-    "waitForSnapshot",
-    "controlAdmission",
-    "sendHeartBeat",
-    "trackEvent",
-    "getTeams",
-];
-type Union<Tuple extends any[], Union = never> = Tuple[number] | Union;
-export type GitpodConnection = Omit<GitpodServiceImpl<GitpodClient, GitpodServer>, "server"> & {
-    server: Pick<GitpodServer, Union<UsedGitpodFunction>>;
-};
 
 export async function* getOpenablePorts(): AsyncGenerator<PortsStatus.AsObject[], void, void> {
     const supervisor = new SupervisorConnection(new DisposableCollection());
