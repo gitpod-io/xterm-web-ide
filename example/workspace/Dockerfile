@@ -1,3 +1,3 @@
-FROM ubuntu:rolling
+FROM gitpod/workspace-full
 
-RUN apt-get update -y && apt-get install -y git tmux curl
+# RUN apt-get update -y && apt-get install -y git tmux curl

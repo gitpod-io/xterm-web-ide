@@ -50,7 +50,7 @@ export const initiateRemoteCommunicationChannelSocket = async (protocol: string)
                 break;
             }
             case "notifyAboutUrl": {
-                const { url, port } = messageData.data;
+                const { url, port, name } = messageData.data;
 
                 const openUrlButton = document.createElement("button");
                 openUrlButton.innerText = "Open URL";
@@ -58,6 +58,11 @@ export const initiateRemoteCommunicationChannelSocket = async (protocol: string)
                 openUrlButton.onclick = () => {
                     window.open(url, "_blank");
                 };
+
+                if (name) {
+                    output(`${name} on port ${port} has been opened`, { formActions: [openUrlButton], reason: "info" });
+                    break;
+                }
 
                 output(`Port ${port} has been opened`, { formActions: [openUrlButton], reason: "info" });
                 break;

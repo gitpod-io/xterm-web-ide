@@ -183,24 +183,28 @@ function startServer() {
             ws.send(JSON.stringify(msg));
         });
 
-        getOpenableSupervisorPorts().then((ports) => {
-            console.log(`Sending openable ports to client: ${JSON.stringify(ports)}`);
-            const id = crypto.randomUUID();
-            for (const port of ports) {
-                if (port.onOpen === "notify") {
-                    ws.send(
-                        JSON.stringify({
-                            action: "notifyAboutUrl",
-                            data: { url: port.exposed.url, port: port.localPort },
-                            id,
-                        }),
-                    );
-                } else {
-                    ws.send("You should open" + JSON.stringify(port));
-                    ws.send(JSON.stringify({ action: "openUrl", data: port.exposed.url, id }));
+        function sendPortUpdates() {
+            getOpenableSupervisorPorts().then((ports) => {
+                console.log(`Sending openable ports to client: ${JSON.stringify(ports)}`);
+                const id = crypto.randomUUID();
+                for (const port of ports) {
+                    if (port.onOpen === "notify") {
+                        ws.send(
+                            JSON.stringify({
+                                action: "notifyAboutUrl",
+                                data: { url: port.exposed.url, port: port.localPort, name: port.name },
+                                id,
+                            }),
+                        );
+                    } else {
+                        ws.send(JSON.stringify({ action: "openUrl", data: port.exposed.url, id }));
+                    }
                 }
-            }
-        });
+            });
+        }
+
+        // setInterval(sendPortUpdates, 3_000);
+        setTimeout(sendPortUpdates, 2_000);
     });
 
     let clientForExternalMessages = null;

@@ -255,9 +255,13 @@ function handleDisconnected(e: CloseEvent | ErrorEvent, socket: ReconnectingWebS
 
 type OutputReason = "info" | "error";
 
+const dismissButton = document.createElement("button");
+dismissButton.innerText = "Dismiss";
+
 const outputDialog = document.getElementById("output") as HTMLDialogElement;
-const outputContent = document.getElementById("outputContent")!;
+const outputContent = document.getElementById("outputContent") as HTMLParagraphElement;
 const outputReasonInput = document.getElementById("outputReason") as HTMLInputElement;
+const outputForm = outputDialog.querySelector("form") as HTMLFormElement;
 export function output(
     message: string,
     options?: { formActions?: HTMLInputElement[] | HTMLButtonElement[]; reason?: OutputReason },
@@ -265,8 +269,10 @@ export function output(
     if (typeof outputDialog.showModal === "function") {
         outputContent.innerText = message;
         if (options?.formActions) {
+            outputForm.innerHTML = "";
+            outputForm.appendChild(dismissButton);
             for (const action of options.formActions) {
-                outputDialog.querySelector("form")!.appendChild(action);
+                outputForm.appendChild(action);
             }
         }
         outputReasonInput.value = options?.reason ?? "info";
