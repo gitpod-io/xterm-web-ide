@@ -186,8 +186,8 @@ function startServer() {
         function sendPortUpdates() {
             getOpenableSupervisorPorts().then((ports) => {
                 console.log(`Sending openable ports to client: ${JSON.stringify(ports)}`);
-                const id = crypto.randomUUID();
                 for (const port of ports) {
+                    const id = crypto.randomUUID();
                     if (port.onOpen === "notify") {
                         ws.send(
                             JSON.stringify({

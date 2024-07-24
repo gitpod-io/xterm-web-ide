@@ -18,6 +18,7 @@ import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
 import { Emitter } from "@gitpod/gitpod-protocol/lib/util/event";
 import { DisposableCollection } from "@gitpod/gitpod-protocol/lib/util/disposable";
 import debounce from "lodash/debounce";
+import { type UUID } from "node:crypto";
 
 const onDidChangeState = new Emitter<void>();
 let state: IDEFrontendState = "initializing" as IDEFrontendState;
@@ -119,9 +120,6 @@ async function initiateRemoteTerminal(terminal: Terminal): Promise<void | Reconn
 
     const socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
     socket.onopen = async () => {
-        if (outputReasonInput.value === "error") {
-            outputDialog.close();
-        }
         (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
 
         await runRealTerminal(term, socket as WebSocket);
@@ -255,31 +253,51 @@ function handleDisconnected(e: CloseEvent | ErrorEvent, socket: ReconnectingWebS
 
 type OutputReason = "info" | "error";
 
-const dismissButton = document.createElement("button");
-dismissButton.innerText = "Dismiss";
+const outputStack = new Set<UUID>();
+export const output = (message: string, options?: { formActions?: (HTMLInputElement | HTMLButtonElement)[]; reason?: OutputReason }): UUID => {
+    const outputId = crypto.randomUUID();
+    const dialogElement = document.createElement("dialog");
+    dialogElement.id = outputId;
+    
+    const outputContent = document.createElement("p");
+    outputContent.innerText = message;
+    dialogElement.appendChild(outputContent);
 
-const outputDialog = document.getElementById("output") as HTMLDialogElement;
-const outputContent = document.getElementById("outputContent") as HTMLParagraphElement;
-const outputReasonInput = document.getElementById("outputReason") as HTMLInputElement;
-const outputForm = outputDialog.querySelector("form") as HTMLFormElement;
-export function output(
-    message: string,
-    options?: { formActions?: HTMLInputElement[] | HTMLButtonElement[]; reason?: OutputReason },
-) {
-    if (typeof outputDialog.showModal === "function") {
-        outputContent.innerText = message;
-        if (options?.formActions) {
-            outputForm.innerHTML = "";
-            outputForm.appendChild(dismissButton);
-            for (const action of options.formActions) {
-                outputForm.appendChild(action);
-            }
-        }
-        outputReasonInput.value = options?.reason ?? "info";
-        outputDialog.showModal();
-    } else {
-        console.error("Could not output, user agent does not support the dialog API.");
+    const outputForm = document.createElement("form");
+    outputForm.method = "dialog";
+    const formActions = options?.formActions ?? [];
+    const dismissButton = document.createElement("button");
+    dismissButton.innerText = "Dismiss";
+    formActions.push(dismissButton);
+    for (const action of formActions) {
+        outputForm.appendChild(action);
     }
+
+    const outputReasonInput = document.createElement("input");
+    outputReasonInput.type = "hidden";
+    outputReasonInput.value = options?.reason ?? "info";
+    outputForm.appendChild(outputReasonInput);
+
+    dialogElement.appendChild(outputForm);
+
+    document.body.appendChild(dialogElement);
+    dialogElement.showModal();
+
+    outputStack.add(outputId);
+
+    return outputId;
+};
+
+export const closeModal = (id: UUID) => {
+    const dialogElement = document.getElementById(id) as HTMLDialogElement;
+    if (!dialogElement) {
+        console.warn(`Could not find dialog with ID ${id}`);
+        return;
+    }
+
+    dialogElement.close();
+    dialogElement.remove();
+    outputStack.delete(id);
 }
 
 let attachAddon: AttachAddon;
@@ -328,6 +346,9 @@ window.gitpod.ideService = {
                 toDispose.push({
                     dispose: () => {
                         socket.close();
+                        for (const id of outputStack) {
+                            closeModal(id);
+                        }
                     },
                 });
             });

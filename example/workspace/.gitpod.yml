@@ -14,9 +14,9 @@ tasks:
   
 ports:
     - port: 3000
-      onOpen: ignore
+      onOpen: notify
     - port: 3001
-      onOpen: ignore
+      onOpen: notify
     - port: 8888
       name: JupyterLab
       onOpen: notify
