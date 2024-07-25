@@ -54,7 +54,6 @@ export const initiateRemoteCommunicationChannelSocket = async (protocol: string)
 
                 const openUrlButton = document.createElement("button");
                 openUrlButton.innerText = "Open URL";
-                openUrlButton.type = "button";
                 openUrlButton.onclick = () => {
                     window.open(url, "_blank");
                 };
