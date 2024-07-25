@@ -12,7 +12,7 @@ const argv = require("minimist")(process.argv.slice(2), { boolean: ["openExterna
 
 const { getOpenablePorts } = require("./out/supervisor-helper.cjs");
 const { PortsStatus } = require("@gitpod/supervisor-api-grpc/lib/status_pb");
-const { default: EventEmitter } = require("events");
+const { EventEmitter } = require("events");
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 23000;
 const host = "0.0.0.0";
