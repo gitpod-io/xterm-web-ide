@@ -10,7 +10,7 @@
     "format": "prettier -w . --experimental-ternaries",
     "start": "yarn package && node dist/index.cjs",
     "package:client": "rimraf out/ && yarn build && mkdir -p out/ && cp -r index.html dist/ assets/ out/",
-    "package:server": "ncc build -m server.cjs -o dist/ --target es2022 --source-map",
+    "package:server": "tsc --module commonjs supervisor-helper.ts --outdir out --esmoduleinterop true --declaration && mv out/supervisor-helper.js out/supervisor-helper.cjs && ncc build -m server.cjs -o dist/ --target es2022 --source-map",
     "inject-commit": "git rev-parse HEAD > dist/commit.txt",
     "package": "yarn build && yarn package:server && yarn inject-commit"
   },
@@ -29,6 +29,8 @@
   "homepage": "https://github.com/gitpod-io/xterm-web-ide#readme",
   "dependencies": {
     "@gitpod/gitpod-protocol": "^0.1.5-main.6983",
+    "@gitpod/supervisor-api-grpc": "0.1.5-main-gha.10852",
+    "@grpc/grpc-js": "^1.11.1",
     "@xterm/addon-attach": "^0.11.0",
     "@xterm/addon-canvas": "^0.7.0",
     "@xterm/addon-fit": "^0.10.0",
@@ -45,7 +47,6 @@
     "reconnecting-websocket": "^4.4.0"
   },
   "devDependencies": {
-    "prettier": "^3.3.3",
     "@open-wc/building-rollup": "^3.0.2",
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-terser": "^0.4.4",
@@ -57,6 +58,7 @@
     "express": "^4.19.2",
     "express-ws": "^5.0.2",
     "node-pty": "^1.0.0",
+    "prettier": "^3.3.3",
     "rimraf": "^4.1.2",
     "rollup": "^4.19.0",
     "rollup-plugin-node-polyfills": "^0.2.1",

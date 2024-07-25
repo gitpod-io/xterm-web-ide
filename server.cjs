@@ -3,13 +3,16 @@
 const express = require("express");
 const expressWs = require("express-ws");
 const pty = require("node-pty");
-const events = require("events");
 const crypto = require("crypto");
 
 const rateLimit = require("express-rate-limit").default;
 
 const WebSocket = require("ws");
 const argv = require("minimist")(process.argv.slice(2), { boolean: ["openExternal"] });
+
+const { getOpenablePorts } = require("./out/supervisor-helper.cjs");
+const { PortsStatus } = require("@gitpod/supervisor-api-grpc/lib/status_pb");
+const { EventEmitter } = require("events");
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 23000;
 const host = "0.0.0.0";
@@ -137,7 +140,7 @@ function startServer() {
         res.end();
     });
 
-    const em = new events.EventEmitter();
+    const em = new EventEmitter();
     app.ws("/terminals/remote-communication-channel/", (ws, _req) => {
         console.info(`Client joined remote communication channel`);
 
@@ -156,12 +159,39 @@ function startServer() {
         em.on("message", (msg) => {
             ws.send(JSON.stringify(msg));
         });
+
+        async function sendPortUpdates() {
+            for await (const ports of getOpenablePorts()) {
+                for (const port of ports) {
+                    if (!port.exposed || !port.exposed.url) {
+                        continue;
+                    }
+                    const id = crypto.randomUUID();
+                    if (port.onOpen === PortsStatus.OnOpenAction.NOTIFY) {
+                        ws.send(
+                            JSON.stringify({
+                                action: "notifyAboutUrl",
+                                data: { url: port.exposed.url, port: port.localPort, name: port.name },
+                                id,
+                            }),
+                        );
+                    } else {
+                        ws.send(JSON.stringify({ action: "openUrl", data: port.exposed.url, id }));
+                    }
+                }
+            }
+        }
+
+        sendPortUpdates();
     });
 
+    let clientForExternalMessages = null;
     app.ws("/terminals/:pid", (ws, req) => {
         const term = terminals[parseInt(req.params.pid)];
         console.log(`Client connected to terminal ${term.pid}`);
         ws.send(logs[term.pid]);
+
+        clientForExternalMessages = term.pid;
 
         // binary message buffering
         function bufferUtf8(socket, timeout) {

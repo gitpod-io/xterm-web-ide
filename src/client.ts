@@ -18,6 +18,7 @@ import { initiateRemoteCommunicationChannelSocket } from "./lib/remote";
 import { Emitter } from "@gitpod/gitpod-protocol/lib/util/event";
 import { DisposableCollection } from "@gitpod/gitpod-protocol/lib/util/disposable";
 import debounce from "lodash/debounce";
+import { type UUID } from "node:crypto";
 
 const onDidChangeState = new Emitter<void>();
 let state: IDEFrontendState = "initializing" as IDEFrontendState;
@@ -104,6 +105,7 @@ async function initiateRemoteTerminal(terminal: Terminal): Promise<void | Reconn
     if (!initialTerminalResizeRequest.ok) {
         output("Could not setup IDE. Retry?", {
             formActions: [reloadButton],
+            reason: "error",
         });
         return;
     }
@@ -118,7 +120,6 @@ async function initiateRemoteTerminal(terminal: Terminal): Promise<void | Reconn
 
     const socket = new ReconnectingWebSocket(socketURL, [], webSocketSettings);
     socket.onopen = async () => {
-        outputDialog.close();
         (document.querySelector(".xterm-helper-textarea") as HTMLTextAreaElement).focus();
 
         await runRealTerminal(term, socket as WebSocket);
@@ -228,14 +229,18 @@ function handleDisconnected(e: CloseEvent | ErrorEvent, socket: ReconnectingWebS
             case 1005:
                 output("For some reason the WebSocket closed. Reload?", {
                     formActions: [reconnectButton, reloadButton],
+                    reason: "error",
                 });
             case 1006:
                 if (navigator.onLine) {
                     output("Cannot reach workspace, consider reloading", {
                         formActions: [reloadButton],
+                        reason: "error",
                     });
                 } else {
-                    output("You are offline, please connect to the internet and refresh this page");
+                    output("You are offline, please connect to the internet and refresh this page", {
+                        reason: "error",
+                    });
                 }
                 break;
             default:
@@ -246,19 +251,57 @@ function handleDisconnected(e: CloseEvent | ErrorEvent, socket: ReconnectingWebS
     console.error(e);
 }
 
-const outputDialog = document.getElementById("output") as HTMLDialogElement;
-const outputContent = document.getElementById("outputContent")!;
-function output(message: string, options?: { formActions: HTMLInputElement[] | HTMLButtonElement[] }) {
-    if (typeof outputDialog.showModal === "function") {
-        outputContent.innerText = message;
-        if (options?.formActions) {
-            for (const action of options.formActions) {
-                outputDialog.querySelector("form")!.appendChild(action);
-            }
-        }
-        outputDialog.showModal();
+type OutputReason = "info" | "error";
+
+const outputStack = new Set<UUID>();
+export const output = (
+    message: string,
+    options?: { formActions?: (HTMLInputElement | HTMLButtonElement)[]; reason?: OutputReason },
+): UUID => {
+    const outputId = crypto.randomUUID();
+    const dialogElement = document.createElement("dialog");
+    dialogElement.id = outputId;
+
+    const outputContent = document.createElement("p");
+    outputContent.innerText = message;
+    dialogElement.appendChild(outputContent);
+
+    const outputForm = document.createElement("form");
+    outputForm.method = "dialog";
+    const formActions = options?.formActions ?? [];
+    const dismissButton = document.createElement("button");
+    dismissButton.innerText = "Dismiss";
+    formActions.push(dismissButton);
+    for (const action of formActions) {
+        outputForm.appendChild(action);
     }
-}
+
+    const outputReasonInput = document.createElement("input");
+    outputReasonInput.type = "hidden";
+    outputReasonInput.value = options?.reason ?? "info";
+    outputForm.appendChild(outputReasonInput);
+
+    dialogElement.appendChild(outputForm);
+
+    document.body.appendChild(dialogElement);
+    dialogElement.showModal();
+
+    outputStack.add(outputId);
+
+    return outputId;
+};
+
+export const closeModal = (id: UUID) => {
+    const dialogElement = document.getElementById(id) as HTMLDialogElement;
+    if (!dialogElement) {
+        console.warn(`Could not find dialog with ID ${id}`);
+        return;
+    }
+
+    dialogElement.close();
+    dialogElement.remove();
+    outputStack.delete(id);
+};
 
 let attachAddon: AttachAddon;
 
@@ -306,6 +349,9 @@ window.gitpod.ideService = {
                 toDispose.push({
                     dispose: () => {
                         socket.close();
+                        for (const id of outputStack) {
+                            closeModal(id);
+                        }
                     },
                 });
             });
