@@ -8,6 +8,8 @@ export function isGRPCErrorStatus<T extends grpc.status>(err: any, status: T): b
     return err && typeof err === "object" && "code" in err && err.code === status;
 }
 
+export type Port = PortsStatus.AsObject;
+
 // Adapted from https://github.com/gitpod-io/gitpod-code/blob/master/gitpod-shared/src/gitpodContext.ts#L38
 export class SupervisorConnection {
     static readonly deadlines = {
@@ -81,21 +83,42 @@ export class SupervisorConnection {
     }
 }
 
-export async function* getOpenablePorts(): AsyncGenerator<PortsStatus.AsObject[], void, void> {
+const isPortUnchanged = (port: Port, previousState?: Port[]) => {
+    if (!previousState) return false;
+
+    const previousPort = previousState.find((p) => p.localPort === port.localPort);
+
+    if (!previousPort) return false;
+
+    return (
+        previousPort.onOpen === port.onOpen && previousPort.exposed?.url === port.exposed?.url && previousPort.served
+    );
+};
+
+/**
+ * This function is a generator that yields the ports that are open and can be opened. After the initial update it only yields the ports that have changed.
+ */
+export async function* getOpenablePorts(): AsyncGenerator<Port[], void, void> {
     const supervisor = new SupervisorConnection(new DisposableCollection());
     supervisor.startObservePortsStatus();
 
     const internalEventEmitter = new EventEmitter();
-    supervisor.onDidChangePortStatus.on("update", (ports: PortsStatus.AsObject[]) => {
+    supervisor.onDidChangePortStatus.on("update", (ports: Port[]) => {
         internalEventEmitter.emit("portsUpdated", ports);
     });
 
+    let previousState: undefined | Port[];
     while (true) {
-        const ports = await new Promise<PortsStatus.AsObject[]>((resolve) => {
+        const ports = await new Promise<Port[]>((resolve) => {
             internalEventEmitter.once("portsUpdated", resolve);
         });
         const filtered = ports.filter((port) => {
             if (!port.served) {
+                return false;
+            }
+
+            // Did we see this port before? If so, did it change? If not, no need to notify clients
+            if (isPortUnchanged(port, previousState)) {
                 return false;
             }
 
@@ -110,6 +133,8 @@ export async function* getOpenablePorts(): AsyncGenerator<PortsStatus.AsObject[]
                     return true;
             }
         });
+
+        previousState = ports;
 
         yield filtered;
     }
