@@ -205,6 +205,12 @@ async function createTerminal(
     const debouncedUpdateTerminalSize = debounce(() => updateTerminalSize(term), 200, { trailing: true });
     window.onresize = () => debouncedUpdateTerminalSize();
 
+    // Ask for confirmation before closing the current terminal session
+    window.onbeforeunload = (event) => {
+        event.preventDefault();
+	event.returnValue = "really?"; // supporting legacy browsers
+    };
+
     // Register the onclick event for the reconnect button
     reconnectButton.onclick = () => terminalSocket.reconnect();
 
