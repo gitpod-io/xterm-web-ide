@@ -66,6 +66,13 @@ export const initiateRemoteCommunicationChannelSocket = async (protocol: string)
                 output(`Port ${port} has been opened`, { formActions: [openUrlButton], reason: "info" });
                 break;
             }
+            case "confirmExit": {
+                // Ask for confirmation before closing the current terminal session
+                window.onbeforeunload = (e: BeforeUnloadEvent) => {
+                    e.preventDefault();
+                    e.returnValue = "Are you sure you want to close the terminal?";
+                };
+            }
             default:
                 console.debug("Unhandled message", messageData);
         }
