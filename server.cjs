@@ -182,7 +182,15 @@ function startServer() {
             }
         }
 
-        sendPortUpdates();
+        async function init() {
+            if (process.env["XTERM_CONFIRM_BROWSER_EXIT"] === "true") {
+                ws.send(JSON.stringify({ action: "confirmExit" }));
+            }
+
+            sendPortUpdates();
+        }
+
+        init();
     });
 
     let clientForExternalMessages = null;
